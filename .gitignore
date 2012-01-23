@@ -1,0 +1,9 @@
+# Makefile dependencies (don't put * before it!)
+.dep
+
+*.elf
+*.hex
+*.bin
+*.map
+*.lst
+*.o
