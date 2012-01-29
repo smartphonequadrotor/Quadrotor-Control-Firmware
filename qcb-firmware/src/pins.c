@@ -19,16 +19,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
+/* This file defines the configuration of the pins for the Quadrotor Control
+ * Board and provides a function for to properly initialize all pins for
+ * either GPIO or peripheral usage.
+ */
+
 #include "pins.h"
 
-int main(void)
+
+
+/*
+ * Initialize the pins.
+ */
+void pins_init(void)
 {
-	pins_init();
 
-	while(1)
-	{
-
-	}
-
-	return 42;
 }
