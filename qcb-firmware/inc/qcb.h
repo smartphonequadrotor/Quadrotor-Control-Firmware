@@ -22,6 +22,10 @@ SOFTWARE.
 #ifndef _QCB_H_
 #define _QCB_H_
 
+/* Include commonly used headers */
+#include <stdbool.h>
+#include <stdint.h>
+
 /* File for QCB specific defines, variables, and functions that don't belong
  * anywhere else.
  */

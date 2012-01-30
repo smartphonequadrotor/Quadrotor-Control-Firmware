@@ -1,6 +1,8 @@
 # Makefile dependencies (don't put * before it!)
 .dep
-
+# Eclipse settings (don't put * before it!)
+.settings
+# Binaries and build products
 *.elf
 *.hex
 *.bin

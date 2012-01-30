@@ -51,7 +51,6 @@ DLIBS =
 PROJECT = qcb-firmware-test
 
 # Define linker script file here
-LDSCRIPT_RAM = ./sam7s161_ram.ld
 LDSCRIPT_ROM = ./sam7s161_rom.ld
 
 # List all user C define here, like -D_DEBUG=1
@@ -96,8 +95,7 @@ MCFLAGS = -mcpu=$(MCU)
 
 ASFLAGS = $(MCFLAGS) -g -gdwarf-2 -Wa,-amhls=$(<:.s=.lst) $(ADEFS)
 CPFLAGS = $(MCFLAGS) $(OPT) -gdwarf-2 -std=c99 -mthumb-interwork -fomit-frame-pointer -Wall -Wstrict-prototypes -fverbose-asm -Wa,-ahlms=$(<:.c=.lst) $(DEFS)
-LDFLAGS_RAM = $(MCFLAGS) -nostartfiles -T$(LDSCRIPT_RAM) -Wl,-Map=$(PROJECT)_ram.map,--cref,--no-warn-mismatch $(LIBDIR)
-LDFLAGS_ROM = $(MCFLAGS) -nostartfiles -T$(LDSCRIPT_ROM) -Wl,-Map=$(PROJECT)_rom.map,--cref,--no-warn-mismatch $(LIBDIR)
+LDFLAGS_ROM = $(MCFLAGS) -nostartfiles -T$(LDSCRIPT_ROM) -Wl,-Map=$(PROJECT).map,--cref,--no-warn-mismatch $(LIBDIR)
 
 # Generate dependency information
 CPFLAGS += -MD -MP -MF .dep/$(@F).d
@@ -106,11 +104,9 @@ CPFLAGS += -MD -MP -MF .dep/$(@F).d
 # makefile rules
 #
 
-all: RAM ROM
+all: ROM
 
-RAM: $(OBJS) $(PROJECT)_ram.elf $(PROJECT)_ram.hex
-
-ROM: $(OBJS) $(PROJECT)_rom.elf $(PROJECT)_rom.hex
+ROM: $(OBJS) $(PROJECT).elf $(PROJECT).hex
 
 %.o : %.c
 	$(CC) -c $(CPFLAGS) -I . $(INCDIR) $< -o $@
@@ -118,10 +114,7 @@ ROM: $(OBJS) $(PROJECT)_rom.elf $(PROJECT)_rom.hex
 %.o : %.s
 	$(AS) -c $(ASFLAGS) $< -o $@
 
-%ram.elf: $(OBJS)
-	$(CC) $(OBJS) $(LDFLAGS_RAM) $(LIBS) -o $@
-
-%rom.elf: $(OBJS)
+%.elf: $(OBJS)
 	$(CC) $(OBJS) $(LDFLAGS_ROM) $(LIBS) -o $@
 
 %hex: %elf
@@ -129,12 +122,9 @@ ROM: $(OBJS) $(PROJECT)_rom.elf $(PROJECT)_rom.hex
 
 clean:
 	-rm -f $(OBJS)
-	-rm -f $(PROJECT)_ram.elf
-	-rm -f $(PROJECT)_ram.map
-	-rm -f $(PROJECT)_ram.hex
-	-rm -f $(PROJECT)_rom.elf
-	-rm -f $(PROJECT)_rom.map
-	-rm -f $(PROJECT)_rom.hex
+	-rm -f $(PROJECT).elf
+	-rm -f $(PROJECT).map
+	-rm -f $(PROJECT).hex
 	-rm -f $(SRC:.c=.c.bak)
 	-rm -f $(SRC:.c=.lst)
 	-rm -f $(ASRC:.s=.s.bak)
