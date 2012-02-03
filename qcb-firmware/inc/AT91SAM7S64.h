@@ -25,8 +25,8 @@
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 //  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //  ----------------------------------------------------------------------------
-// File Name           : AT91SAM7S64.h
-// Object              : AT91SAM7S64 definitions
+// File Name           : AT91SAM7S161.h
+// Object              : AT91SAM7S161 definitions
 // Generated           : AT91 SW Application Group  01/23/2009 (11:51:06)
 // 
 // CVS Reference       : /AT91SAM7S64.pl/1.23/Wed Jan 21 10:52:45 2009//
@@ -52,8 +52,8 @@
 // CVS Reference       : /ADC_6051C.pl/1.1/Mon Jan 31 13:12:40 2005//
 //  ----------------------------------------------------------------------------
 
-#ifndef AT91SAM7S64_H
-#define AT91SAM7S64_H
+#ifndef AT91SAM7S161_H
+#define AT91SAM7S161_H
 
 #ifndef __ASSEMBLY__
 typedef volatile unsigned int AT91_REG;// Hardware register definition
@@ -1697,7 +1697,7 @@ typedef struct _AT91S_UDP {
 #define AT91C_UDP_TXVDIS      (0x1 <<  8) // (UDP) 
 
 // *****************************************************************************
-//               REGISTER ADDRESS DEFINITION FOR AT91SAM7S64
+//               REGISTER ADDRESS DEFINITION FOR AT91SAM7S161
 // *****************************************************************************
 // ========== Register definition for SYS peripheral ========== 
 // ========== Register definition for AIC peripheral ========== 
@@ -2054,7 +2054,7 @@ typedef struct _AT91S_UDP {
 #define AT91C_UDP_IER   (AT91_CAST(AT91_REG *) 	0xFFFB0010) // (UDP) Interrupt Enable Register
 
 // *****************************************************************************
-//               PIO DEFINITIONS FOR AT91SAM7S64
+//               PIO DEFINITIONS FOR AT91SAM7S161
 // *****************************************************************************
 #define AT91C_PIO_PA0        (1 <<  0) // Pin Controlled by PA0
 #define AT91C_PA0_PWM0     (AT91C_PIO_PA0) //  PWM Channel 0
@@ -2191,7 +2191,7 @@ typedef struct _AT91S_UDP {
 #define AT91C_ALL_INT   (0xC0007FF7) // ALL VALID INTERRUPTS
 
 // *****************************************************************************
-//               BASE ADDRESS DEFINITIONS FOR AT91SAM7S64
+//               BASE ADDRESS DEFINITIONS FOR AT91SAM7S161
 // *****************************************************************************
 #define AT91C_BASE_SYS       (AT91_CAST(AT91PS_SYS) 	0xFFFFF000) // (SYS) Base Address
 #define AT91C_BASE_AIC       (AT91_CAST(AT91PS_AIC) 	0xFFFFF000) // (AIC) Base Address
@@ -2229,17 +2229,17 @@ typedef struct _AT91S_UDP {
 #define AT91C_BASE_UDP       (AT91_CAST(AT91PS_UDP) 	0xFFFB0000) // (UDP) Base Address
 
 // *****************************************************************************
-//               MEMORY MAPPING DEFINITIONS FOR AT91SAM7S64
+//               MEMORY MAPPING DEFINITIONS FOR AT91SAM7S161
 // *****************************************************************************
 // ISRAM
 #define AT91C_ISRAM	 (0x00200000) // Internal SRAM base address
-#define AT91C_ISRAM_SIZE	 (0x00004000) // Internal SRAM size in byte (16 Kbytes)
+#define AT91C_ISRAM_SIZE	 (0x00001000) // Internal SRAM size in byte (4 Kbytes)
 // IFLASH
 #define AT91C_IFLASH	 (0x00100000) // Internal FLASH base address
-#define AT91C_IFLASH_SIZE	 (0x00010000) // Internal FLASH size in byte (64 Kbytes)
-#define AT91C_IFLASH_PAGE_SIZE	 (128) // Internal FLASH Page Size: 128 bytes
-#define AT91C_IFLASH_LOCK_REGION_SIZE	 (4096) // Internal FLASH Lock Region Size: 4 Kbytes
-#define AT91C_IFLASH_NB_OF_PAGES	 (512) // Internal FLASH Number of Pages: 512 bytes
-#define AT91C_IFLASH_NB_OF_LOCK_BITS	 (16) // Internal FLASH Number of Lock Bits: 16 bytes
+#define AT91C_IFLASH_SIZE	 (0x00004000) // Internal FLASH size in byte (16 Kbytes)
+#define AT91C_IFLASH_PAGE_SIZE	 (64) // Internal FLASH Page Size: 64 bytes
+#define AT91C_IFLASH_LOCK_REGION_SIZE	 (2048) // Internal FLASH Lock Region Size: 2 Kbytes
+#define AT91C_IFLASH_NB_OF_PAGES	 (256) // Internal FLASH Number of Pages: 256 bytes
+#define AT91C_IFLASH_NB_OF_LOCK_BITS	 (8) // Internal FLASH Number of Lock Bits: 8 bytes
 
 #endif
