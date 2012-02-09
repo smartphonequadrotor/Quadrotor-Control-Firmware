@@ -21,15 +21,30 @@ SOFTWARE.
 
 #include "qcb.h"
 #include "pins.h"
+#include "us1.h"
+#include "interrupts.h"
 
 int main(void)
 {
+	// Enable peripherals
 	pins_init();
+	us1_init();
+
+	// Once everything is initialized, enable interrupts globally
+	// Producer type activities should not commence until after this point
+	interrupts_enable();
 
 	while(1)
 	{
-
+		// Button 4 turns on LED 4
+		if(AT91C_BASE_PIOA->PIO_PDSR & AT91C_PIO_PA30)
+		{
+			AT91C_BASE_PIOA->PIO_SODR = AT91C_PIO_PA19;
+		}
+		else
+		{
+			AT91C_BASE_PIOA->PIO_CODR = AT91C_PIO_PA19;
+		}
 	}
-
-	return 42;
+	return 0;
 }

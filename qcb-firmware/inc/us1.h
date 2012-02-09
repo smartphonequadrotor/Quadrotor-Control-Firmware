@@ -19,25 +19,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#ifndef _QCB_H_
-#define _QCB_H_
+#include "qcb.h"
 
-/*
- * File for QCB specific defines, variables, functions that don't belong
- * anywhere else, and commonly used headers.
- */
-
-/* Commonly used headers */
-#include <stdbool.h>
-#include <stdint.h>
-
-/* microcontroller header */
-#include "AT91SAM7S161.h"
-
-/*
- * TODO:
- * Create function for enabling interrupts and have i_bit set in startup.s
- * Implement workaround for errata  detailed in section 40.22.2.1
- */
-
-#endif // _QCB_H_
+void us1_init(void);

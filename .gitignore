@@ -9,3 +9,6 @@
 *.map
 *.lst
 *.o
+*.lss
+*.sym
+

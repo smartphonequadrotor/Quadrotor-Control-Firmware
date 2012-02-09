@@ -1,244 +1,157 @@
-/****************************************************************************
-*  Copyright (c) 2009 by Michael Fischer. All rights reserved.
-*
-*  Redistribution and use in source and binary forms, with or without 
-*  modification, are permitted provided that the following conditions 
-*  are met:
-*  
-*  1. Redistributions of source code must retain the above copyright 
-*     notice, this list of conditions and the following disclaimer.
-*  2. Redistributions in binary form must reproduce the above copyright
-*     notice, this list of conditions and the following disclaimer in the 
-*     documentation and/or other materials provided with the distribution.
-*  3. Neither the name of the author nor the names of its contributors may 
-*     be used to endorse or promote products derived from this software 
-*     without specific prior written permission.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
-*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
-*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL 
-*  THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
-*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS 
-*  OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED 
-*  AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
-*  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF 
-*  THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
-*  SUCH DAMAGE.
-*
-****************************************************************************
-*
-*  History:
-*
-*  25.09.09  mifi   First Version, based on the example from Quantum Leaps 
-*                   with some small modifications. The original can be find 
-*                   here: http://www.embedded.com/design/200900043
-****************************************************************************/
-
 /*****************************************************************************
-* Product: Generic startup code for ARM with GNU toolset
-* Date of the Last Update:  Jun 12, 2007
-*
-*                    Q u a n t u m     L e a P s
-*                    ---------------------------
-*                    innovating embedded systems
-*
-* Copyright (C) 2007 Quantum Leaps, LLC. All rights reserved.
-*
-* Contact information:
-* Quantum Leaps Web site:  http://www.quantum-leaps.com
-* e-mail:                  info@quantum-leaps.com
+Copyright (c) 2011 Abhin Chhabra, Jordan Woehr, Lisa Graham, Ryan Bray
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 *****************************************************************************/
 
-/* Standard definitions of Mode bits and Interrupt (I & F) flags in PSRs */
+.code 32
 
-    .equ    I_BIT,          0x80      /* when I bit is set, IRQ is disabled */
-    .equ    F_BIT,          0x40      /* when F bit is set, FIQ is disabled */
+// Export these for startup.c
+.global fiq_handler
+.global default_handler
+.global spurious_handler
 
-    .equ    USR_MODE,       0x10
-    .equ    FIQ_MODE,       0x11
-    .equ    IRQ_MODE,       0x12
-    .equ    SVC_MODE,       0x13
-    .equ    ABT_MODE,       0x17
-    .equ    UND_MODE,       0x1B
-    .equ    SYS_MODE,       0x1F
+// Initialization routine in C
+.extern init
 
-/* constant to pre-fill the stack */
-    .equ    STACK_FILL,     0xAAAAAAAA
+// ARM defines
+.equ mode_fiq, 0x11
+.equ mode_irq, 0x12
+.equ mode_svc, 0x13
+.equ i_bit,    0x80
+.equ f_bit,    0x40
 
-/*****************************************************************************
-* The starupt code must be linked at the start of ROM, which is NOT
-* necessarily address zero.
-*/
-    .text
-    .code 32
+// Processor peripheral defines
+.equ interrupt_vector_register,  0xfffff100
+.equ end_of_interrupt_register,  0xfffff130
 
-    .global _start
-    .func   _start
+// Other constants
+.equ stack_init_value, 0xaaaaaaaa
 
-_start:
+// Define vectors
+.section .vectors, "ax"
+	ldr   pc, =reset_handler
+	ldr   pc, =undef_handler
+	ldr   pc, =swi_handler
+	ldr   pc, =pabort_handler
+	ldr   pc, =dabort_handler
+	ldr   pc, =0               /* reserved */
+	ldr   pc, =irq_handler
+	ldr   pc, =fiq_handler
 
-    /* Vector table
-    * NOTE: used only very briefly until RAM is remapped to address zero
-    */
-    LDR     pc, ResetAddr    /* Reset                 */
-    LDR     pc, UndefAddr    /* Undefined instruction */
-    LDR     pc, SWIAddr      /* Software interrupt    */
-    LDR     pc, PAbortAddr   /* Prefetch abort        */
-    LDR     pc, DAbortAddr   /* Data abort            */
-    LDR     pc, ReservedAddr /* Reserved              */
-    LDR     pc, IRQAddr      /* IRQ interrupt         */
-    LDR     pc, FIQAddr      /* FIQ interrupt         */
-    
-ResetAddr:     .word _reset
-UndefAddr:     .word UndefHandler
-SWIAddr:       .word SWIHandler
-PAbortAddr:    .word PAbortHandler
-DAbortAddr:    .word DAbortHandler
-ReservedAddr:  .word 0
-IRQAddr:       .word IRQHandler
-FIQAddr:       .word FIQHandler
+// First real code to execute
+.section .init, "ax"
+reset_handler:
+	ldr   sp, =__stack_top__ // Set temporary stack pointer
+	ldr   r0, =init          // Initialize processor
+	mov   lr, pc
+	bx    r0
 
-    .align 4             /* Align to the word boundary */
+	// Configure processor modes
+	// The processor will normally run in supervisor mode. When an interrupt
+	// occurs, the processor will be in irq mode and will disable supervisor
+	// interrupts and execute the interrupt in supervisor mode using its stack.
 
+	// Interrupts should all already be disabled ...
+	// Disable interrupts in fiq mode
+	msr   cpsr_c, #(mode_fiq | i_bit | f_bit)
+	// Disable interrupts in irq mode
+	msr   cpsr_c, #(mode_irq | i_bit | f_bit)
+	// Set the irq stack (very top)
+	ldr   sp, =__irq_stack_top__
+	// Disable interrupts in supervisor mode
+	msr   cpsr_c, #(mode_svc | 0 | f_bit)
+	// Set supervisors stack (just below the irq stack)
+	ldr   sp, =__svc_stack_top__
 
-/*****************************************************************************
-* _reset
-*/
-_reset:
+// Initialize the stack
+	ldr     r0, =__stack_start__
+    ldr     r1, =__stack_top__
+    ldr     r2, =stack_init_value
+loop_stack_fill:
+    cmp     r0, r1
+    stmltia r0!, {r2}
+    blt     loop_stack_fill
 
-    /* Call the platform-specific low-level initialization routine
-    *
-    * NOTE: The ROM is typically NOT at its linked address before the remap,
-    * so the branch to low_level_init() must be relative (position
-    * independent code). The low_level_init() function must continue to
-    * execute in ARM state. Also, the function low_level_init() cannot rely
-    * on uninitialized data being cleared and cannot use any initialized
-    * data, because the .bss and .data sections have not been initialized yet.
-    */
-    LDR     r0,=_reset           /* pass the reset address as the 1st argument */
-    LDR     r1,=_cstartup        /* pass the return address as the 2nd argument */
-    MOV     lr,r1                /* set the return address after the remap */
-    LDR     sp,=__stack_end__    /* set the temporary stack pointer */
-    B       low_level_init       /* relative branch enables remap */
+// Relocation data and ram functions to ram
+	ldr     r1, =_etext
+	ldr     r2, =_data
+	ldr     r3, =_edata
+loop_relocate:
+	cmp     r2, r3
+	ldrlo   r0, [r1], #4
+	strlo   r0, [r2], #4
+	blo     loop_relocate
 
+// Zero the bss section
+	mov     r0, #0
+	ldr     r1, =__bss_start__
+	ldr     r2, =__bss_end__
+loop_bss_init:
+	cmp     r1, r2
+	strlo   r0, [r1], #4
+	blo     loop_bss_init
 
-    /* NOTE: after the return from low_level_init() the ROM is remapped
-    * to its linked address so the rest of the code executes at its linked
-    * address.
-    */
+// Jump to main
+	ldr   r0, =main
+	mov   lr, pc
+	bx    r0
 
-_cstartup:
-    /* Relocate .fastcode section (copy from ROM to RAM) */
-    LDR     r0,=__fastcode_load
-    LDR     r1,=__fastcode_start
-    LDR     r2,=__fastcode_end
-1:
-    CMP     r1,r2
-    LDMLTIA r0!,{r3}
-    STMLTIA r1!,{r3}
-    BLT     1b
+c_exited:
+	b     c_exited
 
+undef_handler:
+	b     undef_handler
 
-    /* Relocate the .data section (copy from ROM to RAM) */
-    LDR     r0,=__data_load
-    LDR     r1,=__data_start
-    LDR     r2,=_edata
-1:
-    CMP     r1,r2
-    LDMLTIA r0!,{r3}
-    STMLTIA r1!,{r3}
-    BLT     1b
+swi_handler:
+	b     swi_handler
 
+pabort_handler:
+	b     pabort_handler
 
-    /* Clear the .bss section (zero init) */
-    LDR     r1,=__bss_start__
-    LDR     r2,=__bss_end__
-    MOV     r3,#0
-1:
-    CMP     r1,r2
-    STMLTIA r1!,{r3}
-    BLT     1b
+dabort_handler:
+	b     dabort_handler
 
+irq_handler:
+	// In IRQ mode, first thing to do is save the return address
+	sub   lr, lr, #4
+	// We also need a single register for the irq handler address
+	stmfd sp!, {r0, lr}
+	// Using r14 (lr) as a temp until branching into the handler
+	ldr   r14, =interrupt_vector_register
+	// Make sure interrupt_vector_register is read and written to support protect mode
+	ldr   r0, [r14]
+	str   r0, [r14]
+	// Interrupts are executed in supervisor mode with the I bit set
+	// That is, they use the same stack as most everything else and can't be interrupted
+	msr   cpsr_c, #(mode_svc | i_bit | f_bit)
+	mov   lr, pc           // Save return address
+	bx    r0               // Branch to handler
+	msr   cpsr_c, #(mode_irq | i_bit | f_bit)  // Back to irq mode
+	ldr   r0, =end_of_interrupt_register       // Write to the end of interrupt register
+	str   r0, [r0]
+	ldmia sp!, {r0, pc}^    // Restore registers and return to normal program flow
 
-    /* Fill the .stack section */
-    LDR     r1,=__stack_start__
-    LDR     r2,=__stack_end__
-    LDR     r3,=STACK_FILL
-1:
-    CMP     r1,r2
-    STMLTIA r1!,{r3}
-    BLT     1b
+fiq_handler:
+	b     fiq_handler
 
-    /* Initialize stack pointers for all ARM modes */
-    MSR     CPSR_c,#(IRQ_MODE | I_BIT | F_BIT)
-    LDR     sp,=__irq_stack_top__                /* set the IRQ stack pointer */
+default_handler:
+	b     default_handler
 
-    MSR     CPSR_c,#(FIQ_MODE | I_BIT | F_BIT)
-    LDR     sp,=__fiq_stack_top__                /* set the FIQ stack pointer */
-
-    MSR     CPSR_c,#(SVC_MODE | I_BIT | F_BIT)
-    LDR     sp,=__svc_stack_top__                /* set the SVC stack pointer */
-
-    MSR     CPSR_c,#(ABT_MODE | I_BIT | F_BIT)
-    LDR     sp,=__abt_stack_top__                /* set the ABT stack pointer */
-
-    MSR     CPSR_c,#(UND_MODE | I_BIT | F_BIT)
-    LDR     sp,=__und_stack_top__                /* set the UND stack pointer */
-
-    MSR     CPSR_c,#(SYS_MODE | I_BIT | F_BIT)
-    LDR     sp,=__c_stack_top__                  /* set the C stack pointer */
-
-
-#if 0
-    /* Invoke the static constructors */
-    LDR     r12,=__libc_init_array
-    MOV     lr,pc           /* set the return address */
-    BX      r12             /* the target code can be ARM or THUMB */
-#endif    
-
-
-    /* Enter the C/C++ code */
-    LDR     r12,=main
-    MOV     lr,pc           /* set the return address */
-    BX      r12             /* the target code can be ARM or THUMB */
-    
-ExitFunction:
-    NOP
-    NOP
-    NOP
-    b       ExitFunction   
-    
-    .size   _start, . - _start
-    .endfunc
-    
-/****************************************************************************/
-/*                         Default interrupt handler                        */
-/****************************************************************************/
-
-UndefHandler:
-   b UndefHandler
-   
-SWIHandler:
-   b SWIHandler
-
-PAbortHandler:
-   b PAbortHandler
-
-DAbortHandler:
-   b DAbortHandler
-   
-IRQHandler:
-   b IRQHandler
-   
-FIQHandler:
-   b FIQHandler
-   
-   .weak ExitFunction
-   .weak UndefHandler, SWIHandler, PAbortHandler, DAbortHandler
-   .weak IRQHandler, FIQHandler
-    
-   .end
-
-/*** EOF ***/
+spurious_handler:
+	b     spurious_handler
