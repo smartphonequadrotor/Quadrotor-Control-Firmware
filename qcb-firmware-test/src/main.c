@@ -245,8 +245,8 @@ int main(void)
 	for(int i = 0; i < NUM_PWM_CH; ++i)
 	{
 		AT91C_BASE_PWMC->PWMC_CH[i].PWMC_CMR = PWMC_CMR_CLKA | AT91C_PWMC_CPOL;
-		AT91C_BASE_PWMC->PWMC_CH[i].PWMC_CMR = PWM_PERIOD;
-		AT91C_BASE_PWMC->PWMC_CH[i].PWMC_CMR = PWM_OFF_DUTY;
+		AT91C_BASE_PWMC->PWMC_CH[i].PWMC_CPRDR = PWM_PERIOD;
+		AT91C_BASE_PWMC->PWMC_CH[i].PWMC_CDTYR = PWM_OFF_DUTY;
 	}
 
 	// Last thing to do is enable all 4 pwm channels

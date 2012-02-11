@@ -28,18 +28,42 @@ wait '>'
 send 's31=0'
 wait '>'
 
+; Give the ESCs some time to start
+pause 4
+send 'p0=0'
+wait '>'
+pause 4
+
 while 1
 
-call individual_slow_ramp
-call individual_fast_ramp
-call individual_impulse
+;call motor_test
+
 call individual_step
+call individual_impulse
 call slow_ramp
 call fast_ramp
 call impulse
 call step
 
 endwhile
+
+
+;-----------------------------------------------------------------------------
+; 
+:motor_test
+
+send 'p0=1'
+wait '>'
+send 'p1=1'
+wait '>'
+send 'p2=1'
+wait '>'
+send 'p3=1'
+wait '>'
+pause 4
+
+return
+
 
 ;-----------------------------------------------------------------------------
 ; 
@@ -50,62 +74,290 @@ pause 1
 send 'p0=0'
 wait '>'
 pause 1
+
+send 'p1=9'
+wait '>'
+pause 1
+send 'p1=0'
+wait '>'
+pause 1
+
+send 'p2=9'
+wait '>'
+pause 1
+send 'p2=0'
+wait '>'
+pause 1
+
+send 'p3=9'
+wait '>'
+pause 1
+send 'p3=0'
+wait '>'
+pause 1
+
 return
 
 
 ;-----------------------------------------------------------------------------
 ; 
 :individual_step
-send 'g'
+send 'p0=4'
 wait '>'
-return
-
-
-;-----------------------------------------------------------------------------
-; 
-:individual_slow_ramp
-send 'g'
+pause 4
+send 'p0=0'
 wait '>'
-return
+pause 1
 
-
-;-----------------------------------------------------------------------------
-; 
-:individual_fast_ramp
-send 'g'
+send 'p1=4'
 wait '>'
+pause 4
+send 'p1=0'
+wait '>'
+pause 1
+
+send 'p2=4'
+wait '>'
+pause 4
+send 'p2=0'
+wait '>'
+pause 1
+
+send 'p3=4'
+wait '>'
+pause 4
+send 'p3=0'
+wait '>'
+pause 1
+
 return
 
 
 ;-----------------------------------------------------------------------------
 ; This subroutine approximates a ramp function
 :slow_ramp
-send 'g'
+
+send 'p0=1'
 wait '>'
+send 'p1=1'
+wait '>'
+send 'p2=1'
+wait '>'
+send 'p3=1'
+wait '>'
+pause 3
+
+send 'p0=2'
+wait '>'
+send 'p1=2'
+wait '>'
+send 'p2=2'
+wait '>'
+send 'p3=2'
+wait '>'
+pause 3
+
+send 'p0=3'
+wait '>'
+send 'p1=3'
+wait '>'
+send 'p2=3'
+wait '>'
+send 'p3=3'
+wait '>'
+pause 3
+
+send 'p0=4'
+wait '>'
+send 'p1=4'
+wait '>'
+send 'p2=4'
+wait '>'
+send 'p3=4'
+wait '>'
+pause 3
+
+send 'p0=5'
+wait '>'
+send 'p1=5'
+wait '>'
+send 'p2=5'
+wait '>'
+send 'p3=5'
+wait '>'
+pause 3
+
+send 'p0=6'
+wait '>'
+send 'p1=6'
+wait '>'
+send 'p2=6'
+wait '>'
+send 'p3=6'
+wait '>'
+pause 3
+
+send 'p0=7'
+wait '>'
+send 'p1=7'
+wait '>'
+send 'p2=7'
+wait '>'
+send 'p3=7'
+wait '>'
+pause 3
+
+send 'p0=8'
+wait '>'
+send 'p1=8'
+wait '>'
+send 'p2=8'
+wait '>'
+send 'p3=8'
+wait '>'
+pause 3
+
+send 'p0=9'
+wait '>'
+send 'p1=9'
+wait '>'
+send 'p2=9'
+wait '>'
+send 'p3=9'
+wait '>'
+pause 3
+
+send 'p0=0'
+wait '>'
+send 'p1=0'
+wait '>'
+send 'p2=0'
+wait '>'
+send 'p3=0'
+wait '>'
+pause 1
+
 return
 
 
 ;-----------------------------------------------------------------------------
 ; This subroutine approximates a ramp function
 :fast_ramp
-send 'g'
+
+send 'p0=1'
 wait '>'
+send 'p1=1'
+wait '>'
+send 'p2=1'
+wait '>'
+send 'p3=1'
+wait '>'
+pause 1
+
+send 'p0=3'
+wait '>'
+send 'p1=3'
+wait '>'
+send 'p2=3'
+wait '>'
+send 'p3=3'
+wait '>'
+pause 1
+
+send 'p0=5'
+wait '>'
+send 'p1=5'
+wait '>'
+send 'p2=5'
+wait '>'
+send 'p3=5'
+wait '>'
+pause 1
+
+send 'p0=7'
+wait '>'
+send 'p1=7'
+wait '>'
+send 'p2=7'
+wait '>'
+send 'p3=7'
+wait '>'
+pause 1
+
+send 'p0=9'
+wait '>'
+send 'p1=9'
+wait '>'
+send 'p2=9'
+wait '>'
+send 'p3=9'
+wait '>'
+pause 1
+
+send 'p0=0'
+wait '>'
+send 'p1=0'
+wait '>'
+send 'p2=0'
+wait '>'
+send 'p3=0'
+wait '>'
+pause 1
+
 return
 
 
 ;-----------------------------------------------------------------------------
 ; This subroutine approximates a series of impulse functions
 :impulse
-send 'g'
+
+send 'p0=9'
 wait '>'
+send 'p1=9'
+wait '>'
+send 'p2=9'
+wait '>'
+send 'p3=9'
+wait '>'
+pause 1
+
+send 'p0=0'
+wait '>'
+send 'p1=0'
+wait '>'
+send 'p2=0'
+wait '>'
+send 'p3=0'
+wait '>'
+
+pause 1
+
 return
 
 
 ;-----------------------------------------------------------------------------
 ; This subroutine approximates a step function
 :step
-send 'g'
+
+send 'p0=4'
 wait '>'
+send 'p1=4'
+wait '>'
+send 'p2=4'
+wait '>'
+send 'p3=4'
+wait '>'
+pause 4
+
+send 'p0=0'
+wait '>'
+send 'p1=0'
+wait '>'
+send 'p2=0'
+wait '>'
+send 'p3=0'
+wait '>'
+
+pause 1
+
 return
-
-
