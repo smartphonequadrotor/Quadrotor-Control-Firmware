@@ -24,50 +24,10 @@ SOFTWARE.
 
 #include "AT91SAM7S161.h"
 
-/* AT91SAM7S161.h doesn't define all pins, so we define them here */
-#define PA_0  (1 << 0)
-#define PA_1  (1 << 1)
-#define PA_2  (1 << 2)
-#define PA_3  (1 << 3)
-#define PA_4  (1 << 4)
-#define PA_5  (1 << 5)
-#define PA_6  (1 << 6)
-#define PA_7  (1 << 7)
-#define PA_8  (1 << 8)
-#define PA_9  (1 << 9)
-#define PA_10 (1 << 10)
-#define PA_11 (1 << 11)
-#define PA_12 (1 << 12)
-#define PA_13 (1 << 13)
-#define PA_14 (1 << 14)
-#define PA_15 (1 << 15)
-#define PA_16 (1 << 16)
-#define PA_17 (1 << 17)
-#define PA_18 (1 << 18)
-#define PA_19 (1 << 19)
-#define PA_20 (1 << 20)
-#define PA_21 (1 << 21)
-#define PA_22 (1 << 22)
-#define PA_23 (1 << 23)
-#define PA_24 (1 << 24)
-#define PA_25 (1 << 25)
-#define PA_26 (1 << 26)
-#define PA_27 (1 << 27)
-#define PA_28 (1 << 28)
-#define PA_29 (1 << 29)
-#define PA_30 (1 << 30)
-#define PA_31 (1 << 31)
-
-#define PID_2  (1 << 2)  // PIOA  - Parallel I/O Controller A
-#define PID_7  (1 << 7)  // US1   - USART1
-#define PID_10 (1 << 10) // PWMC  - PWM Controller
-
-// Unbelievably, the Atmel header for this part does not include a define
-// for the base address of the USART1 peripheral
-#define AT91C_BASE_US1      (AT91_CAST(AT91PS_USART)0xFFFC4000)
 #define PWMC_CMR_CLKA       0x0B
 #define PWM_PERIOD          2000
-#define PWM_INITIAL_DUTY    90
+#define PWM_BASE_DUTY       110
+#define PWM_OFF_DUTY        90
 
 // Test firmware defines
 #define CMD_RECEIVING       0
@@ -79,8 +39,14 @@ SOFTWARE.
 #define MSG_PWM             3
 #define MSG_SET             4
 
+#define NUM_SEC_BEFORE_AUTO_KILL_ESC   5
+#define RTT_1HZ_FREQ        0x00008000
+
+#define NUM_PWM_CH          4
+
 // Forward declarations
-void send_byte(uint8_t u8_byte);
+static void send_buffer(const char* ps8_bytes, uint16_t length);
+static void send_byte(int8_t s8_byte);
 
 int main(void)
 {
@@ -97,136 +63,136 @@ int main(void)
 	//------------------------------------------------------------------------
 
 	// Enable clock to Parallel IO Control A (GPIOs)
-	AT91C_BASE_PMC->PMC_PCER = PID_2;
+	AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOA);
 
 	// PA3, PA4 - I2C bus
-	AT91C_BASE_PIOA->PIO_PER = PA_3 | PA_4;
-	AT91C_BASE_PIOA->PIO_OER = PA_3 | PA_4;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA3 | AT91C_PIO_PA4;
+	AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA3 | AT91C_PIO_PA4;
 
 	// PA5 - USART0 Rx
-	AT91C_BASE_PIOA->PIO_PER = PA_5;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA5;
 
 	// PA6 - USART0 Tx
-	AT91C_BASE_PIOA->PIO_PER = PA_6;
-	AT91C_BASE_PIOA->PIO_OER = PA_6;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA6;
+	AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA6;
 
 	// PA8 - BT_EN (Bluetooth enable)
-	AT91C_BASE_PIOA->PIO_PER = PA_8;
-	AT91C_BASE_PIOA->PIO_OER = PA_8;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA8;
+	AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA8;
 
 	// PA9 - CS1 (Chip select 1)
-	AT91C_BASE_PIOA->PIO_PER = PA_9;
-	AT91C_BASE_PIOA->PIO_OER = PA_9;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA9;
+	AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA9;
 
 	// PA10 - EN_1 (Expansion module 1 enable)
-	AT91C_BASE_PIOA->PIO_PER = PA_10;
-	AT91C_BASE_PIOA->PIO_OER = PA_10;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA10;
+	AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA10;
 
 	// PA11 - CS0 (Chip select 0)
-	AT91C_BASE_PIOA->PIO_PER = PA_11;
-	AT91C_BASE_PIOA->PIO_OER = PA_11;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA11;
+	AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA11;
 
 	// PA12 - MISO
-	AT91C_BASE_PIOA->PIO_PER = PA_12;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA12;
 
 	// PA13 - MOSI
-	AT91C_BASE_PIOA->PIO_PER = PA_13;
-	AT91C_BASE_PIOA->PIO_OER = PA_13;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA13;
+	AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA13;
 
 	// PA14 - SCK (SPI clock)
-	AT91C_BASE_PIOA->PIO_PER = PA_14;
-	AT91C_BASE_PIOA->PIO_OER = PA_14;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA14;
+	AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA14;
 
 	// PA15 - EN_2 (Expansion module 2 enable)
-	AT91C_BASE_PIOA->PIO_PER = PA_15;
-	AT91C_BASE_PIOA->PIO_OER = PA_15;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA15;
+	AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA15;
 
 	// PA16 - LED0
 	// Note: Drive low to turn on
-	AT91C_BASE_PIOA->PIO_PER = PA_16;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA16;
 	// Off by default
-	AT91C_BASE_PIOA->PIO_SODR = PA_16;
-	AT91C_BASE_PIOA->PIO_OER = PA_16;
+	AT91C_BASE_PIOA->PIO_SODR = AT91C_PIO_PA16;
+	AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA16;
 
 	// PA17 - LED1
 	// Note: Drive low to turn on
-	AT91C_BASE_PIOA->PIO_PER = PA_17;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA17;
 	// Off by default
-	AT91C_BASE_PIOA->PIO_SODR = PA_17;
-	AT91C_BASE_PIOA->PIO_OER = PA_17;
+	AT91C_BASE_PIOA->PIO_SODR = AT91C_PIO_PA17;
+	AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA17;
 
 	// PA18 - LED2
 	// Note: Drive low to turn on
-	AT91C_BASE_PIOA->PIO_PER = PA_18;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA18;
 	// Off by default
-	AT91C_BASE_PIOA->PIO_SODR = PA_18;
-	AT91C_BASE_PIOA->PIO_OER = PA_18;
+	AT91C_BASE_PIOA->PIO_SODR = AT91C_PIO_PA18;
+	AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA18;
 
 	// PA19 - LED3
 	// Note: Drive low to turn on
-	AT91C_BASE_PIOA->PIO_PER = PA_19;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA19;
 	// Off by default
-	AT91C_BASE_PIOA->PIO_SODR = PA_19;
-	AT91C_BASE_PIOA->PIO_OER = PA_19;
+	AT91C_BASE_PIOA->PIO_SODR = AT91C_PIO_PA19;
+	AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA19;
 
 	// PA20 - EN_3 (Expansion module 3 enable)
-	AT91C_BASE_PIOA->PIO_PER = PA_20;
-	AT91C_BASE_PIOA->PIO_OER = PA_20;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA20;
+	AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA20;
 
 	// PA21, PA22 reserved for USART1
 
 	// PA23 - EN_3 (Expansion module 4 enable)
-	AT91C_BASE_PIOA->PIO_PER = PA_23;
-	AT91C_BASE_PIOA->PIO_OER = PA_23;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA23;
+	AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA23;
 
 	// RTS1 and CTS1 are mixed up on rev 1 of the board
 	// PA24 - RTS1 (actually CTS1 which is why its an output)
-	AT91C_BASE_PIOA->PIO_PER = PA_24;
-	AT91C_BASE_PIOA->PIO_OER = PA_24;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA24;
+	AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA24;
 	// Need to set CTS low for BT module to send data
-	AT91C_BASE_PIOA->PIO_CODR = PA_24;
+	AT91C_BASE_PIOA->PIO_CODR = AT91C_PIO_PA24;
 
 	// PA25 - CTS1 (actually RTS1 which is why its an input)
-	AT91C_BASE_PIOA->PIO_PER = PA_25;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA25;
 
 	// PA26 - NC
 
 	// PA27 - BTN0
 	// Note: Line is pulled low when pressed
-	AT91C_BASE_PIOA->PIO_PER = PA_27;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA27;
 
 	// PA28 - BTN1
 	// Note: Line is pulled low when pressed
-	AT91C_BASE_PIOA->PIO_PER = PA_28;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA28;
 
 	// PA29 - BTN2
 	// Note: Line is pulled low when pressed
-	AT91C_BASE_PIOA->PIO_PER = PA_29;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA29;
 
 	// PA30 - BTN3
 	// Note: Line is pulled low when pressed
-	AT91C_BASE_PIOA->PIO_PER = PA_30;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA30;
 
 	// PA31 - PWR_CNTL
 	// Note: drive low to enable ESCs
-	AT91C_BASE_PIOA->PIO_PER = PA_31;
+	AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA31;
 	// Set pin 31 high before enabling output
 	// so it doesn't go low and turn on ESCs right away
-	AT91C_BASE_PIOA->PIO_SODR = PA_31;
-	AT91C_BASE_PIOA->PIO_OER = PA_31;
+	AT91C_BASE_PIOA->PIO_SODR = AT91C_PIO_PA31;
+	AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA31;
 
 	//------------------------------------------------------------------------
 	// Configure USART1
 	//------------------------------------------------------------------------
 
 	// Enable clock to USART1
-	AT91C_BASE_PMC->PMC_PCER = PID_7;
+	AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_US1);
 
 	// Select the peripheral function for pins 21, 22, 24, 25
 	// Peripheral A is the default for these pins after reset
 	// Disable PIO control of pins 21, 22, 24, 25 so the peripheral use them
 	// READ THIS: PA24 and PA25 are mixed up, peripheral can't use them
-	AT91C_BASE_PIOA->PIO_PDR = (PA_21 | PA_22); // | PA_24 | PA_25);
+	AT91C_BASE_PIOA->PIO_PDR = (AT91C_PIO_PA21 | AT91C_PIO_PA22); // | AT91C_PIO_PA24 | AT91C_PIO_PA25);
 
 	// Configure USART mode to be asynchronous 8 bits, no parity, 1 stop
 	AT91C_BASE_US1->US_MR = (
@@ -259,14 +225,14 @@ int main(void)
 	//------------------------------------------------------------------------
 
 	// Enable clock to PWM peripheral
-	AT91C_BASE_PMC->PMC_PCER = PID_10;
+	AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PWMC);
 
 	// Configure pins to use peripheral functions
 	// PA0, PA1, PA2 use peripheral function A (default)
-	AT91C_BASE_PIOA->PIO_PDR = (PA_0 | PA_1 | PA_2 | PA_7);
+	AT91C_BASE_PIOA->PIO_PDR = (AT91C_PIO_PA0 | AT91C_PIO_PA1 | AT91C_PIO_PA2 | AT91C_PIO_PA7);
 
 	// Pin PA7 requires peripheral function B to be used
-	AT91C_BASE_PIOA->PIO_BSR = PA_7;
+	AT91C_BASE_PIOA->PIO_BSR = AT91C_PIO_PA7;
 
 	// Configure mode register, configures CLKA for 100114 Hz
 	// MCK/16/30= 100114 Hz
@@ -276,20 +242,12 @@ int main(void)
 
 	// Configure all channels to use CLKA, left aligned, start low,
 	// and update duty cycle when writing PWM_CUPDX
-	AT91C_BASE_PWMC_CH0->PWMC_CMR = PWMC_CMR_CLKA | AT91C_PWMC_CPOL;
-	AT91C_BASE_PWMC_CH1->PWMC_CMR = PWMC_CMR_CLKA | AT91C_PWMC_CPOL;
-	AT91C_BASE_PWMC_CH2->PWMC_CMR = PWMC_CMR_CLKA | AT91C_PWMC_CPOL;
-	AT91C_BASE_PWMC_CH3->PWMC_CMR = PWMC_CMR_CLKA | AT91C_PWMC_CPOL;
-
-	AT91C_BASE_PWMC_CH0->PWMC_CPRDR = PWM_PERIOD;
-	AT91C_BASE_PWMC_CH1->PWMC_CPRDR = PWM_PERIOD;
-	AT91C_BASE_PWMC_CH2->PWMC_CPRDR = PWM_PERIOD;
-	AT91C_BASE_PWMC_CH3->PWMC_CPRDR = PWM_PERIOD;
-
-	AT91C_BASE_PWMC_CH0->PWMC_CDTYR = PWM_INITIAL_DUTY;
-	AT91C_BASE_PWMC_CH1->PWMC_CDTYR = PWM_INITIAL_DUTY;
-	AT91C_BASE_PWMC_CH2->PWMC_CDTYR = PWM_INITIAL_DUTY;
-	AT91C_BASE_PWMC_CH3->PWMC_CDTYR = PWM_INITIAL_DUTY;
+	for(int i = 0; i < NUM_PWM_CH; ++i)
+	{
+		AT91C_BASE_PWMC->PWMC_CH[i].PWMC_CMR = PWMC_CMR_CLKA | AT91C_PWMC_CPOL;
+		AT91C_BASE_PWMC->PWMC_CH[i].PWMC_CMR = PWM_PERIOD;
+		AT91C_BASE_PWMC->PWMC_CH[i].PWMC_CMR = PWM_OFF_DUTY;
+	}
 
 	// Last thing to do is enable all 4 pwm channels
 	AT91C_BASE_PWMC->PWMC_ENA = (
@@ -301,22 +259,27 @@ int main(void)
 
 	while(1)
 	{
-		// Turns on bluetooth power when button 3 is pressed
-		if((AT91C_BASE_PIOA->PIO_PDSR & PA_30) == 0)
+		// Turns on bluetooth power when button 4 is pressed
+		if((AT91C_BASE_PIOA->PIO_PDSR & AT91C_PIO_PA30) == 0)
 		{
-			AT91C_BASE_PIOA->PIO_SODR = PA_8;
-			AT91C_BASE_PIOA->PIO_CODR = PA_19;
+			AT91C_BASE_PIOA->PIO_SODR = AT91C_PIO_PA8;
+			AT91C_BASE_PIOA->PIO_CODR = AT91C_PIO_PA19;
 		}
 
-		// Turns on ESC when button 2 is pressed
-		if((AT91C_BASE_PIOA->PIO_PDSR & PA_29) == 0)
+		// Check if we need to kill the ESCs
+		if(AT91C_BASE_RTTC->RTTC_RTVR >= NUM_SEC_BEFORE_AUTO_KILL_ESC)
 		{
-			AT91C_BASE_PIOA->PIO_CODR = PA_31;
-			AT91C_BASE_PIOA->PIO_CODR = PA_18;
+			AT91C_BASE_PIOA->PIO_SODR = AT91C_PIO_PA31;
+			AT91C_BASE_PIOA->PIO_SODR = AT91C_PIO_PA18;
+		}
+
+		// Turn on LED 3 when ESC power is enabled
+		if((AT91C_BASE_PIOA->PIO_PDSR & AT91C_PIO_PA31) == 0)
+		{
+			AT91C_BASE_PIOA->PIO_CODR = AT91C_PIO_PA18;
 		}
 
 		// Receive data over uart and set pins appropriately
-
 		if(u8_cmd_state == CMD_RECEIVING)
 		{
 			// If a character is in the buffer
@@ -435,17 +398,11 @@ int main(void)
 			switch(u8_tx_msg)
 			{
 			case MSG_PROMPT:
-				send_byte('\r');
-				send_byte('\n');
-				send_byte('>');
+				send_buffer("\r\n>", 3);
 				u8_cmd_state = CMD_RECEIVING;
 				break;
 			case MSG_ERROR:
-				send_byte('\r');
-				send_byte('\n');
-				send_byte('E');
-				send_byte('R');
-				send_byte('R');
+				send_buffer("\r\nERR", 5);
 				u8_tx_msg = MSG_PROMPT;
 				break;
 			case MSG_GET:
@@ -455,15 +412,7 @@ int main(void)
 				u8_b1 = 0;
 				u8_b2 = 0;
 
-				send_byte('\r');
-				send_byte('\n');
-				send_byte('P');
-				send_byte('D');
-				send_byte('S');
-				send_byte('R');
-				send_byte('=');
-				send_byte('0');
-				send_byte('x');
+				send_buffer("\r\nPDSR=0x", 9);
 				for(int i = 24; i >= 0; i -= 8)
 				{
 					u8_b1 = ((u32_pin_values & u32_mask1) >> (i+4)) + 0x30;
@@ -490,22 +439,25 @@ int main(void)
 				}
 				else
 				{
-					AT91C_BASE_PWMC->PWMC_CH[u8_cmd_num].PWMC_CUPDR
-							= PWM_INITIAL_DUTY + u8_cmd_val*10;
-					send_byte('\r');
-					send_byte('\n');
-					send_byte('O');
-					send_byte('K');
-					send_byte('!');
+					// A valid PWM message resets the ESC kill timer
+					AT91C_BASE_RTTC->RTTC_RTMR = AT91C_RTTC_RTTRST | RTT_1HZ_FREQ;
+
+					if(u8_cmd_val == 0)
+					{
+						AT91C_BASE_PWMC->PWMC_CH[u8_cmd_num].PWMC_CUPDR
+								= PWM_OFF_DUTY;
+					}
+					else
+					{
+						AT91C_BASE_PWMC->PWMC_CH[u8_cmd_num].PWMC_CUPDR
+								= PWM_BASE_DUTY + u8_cmd_val*10;
+					}
+					send_buffer("\r\nOK!", 5);
 					u8_tx_msg = MSG_PROMPT;
 				}
 				break;
 			case MSG_SET:
-				send_byte('\r');
-				send_byte('\n');
-				send_byte('O');
-				send_byte('K');
-				send_byte('!');
+				send_buffer("\r\nOK!", 5);
 				if(u8_cmd_val == 0)
 				{
 					AT91C_BASE_PIOA->PIO_CODR = (1 << u8_cmd_num);
@@ -532,13 +484,24 @@ int main(void)
 	return 0;
 }
 
-void send_byte(uint8_t u8_byte)
+static void send_buffer(const char* ps8_bytes, uint16_t length)
+{
+	uint16_t index = 0;
+	while(length > 0)
+	{
+		send_byte(ps8_bytes[index]);
+		index++;
+		length--;
+	}
+}
+
+static void send_byte(int8_t s8_byte)
 {
 	// Make sure nothing is being transmitted
 	while((AT91C_BASE_US1->US_CSR & AT91C_US_TXEMPTY) == 0);
 
 	// Write byte to transmit holding register
-	AT91C_BASE_US1->US_THR = u8_byte;
+	AT91C_BASE_US1->US_THR = s8_byte;
 
 	// Wait for byte to be sent
 	while((AT91C_BASE_US1->US_CSR & AT91C_US_TXEMPTY) == 0);
