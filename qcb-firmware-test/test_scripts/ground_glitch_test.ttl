@@ -1,0 +1,111 @@
+; This macro continuously ramps the motors of the quadrotor up and down at
+; various rates. The objective is to try and produce voltage spikes that may
+; brown out the processor or the bluetooth module. The following three cases
+; outline what is expected to happen should a brownout occur:
+; 1) Brownout on the processor
+;    The processor should reset and the test should stop as upon initialization
+;    the test firmware code cuts power to the ESCs.
+; 2) Brownout on the bluetooth module
+;    Should the bluetooth module brownout and loose the connection with the
+;    test runner, the test firmware will automatically cut power to the ESCs
+;    if no 'p' command (sets PWM duty cycle) is received in 5 seconds. At this
+;    point the test stops.
+; 3) Both processor and bluetooth module brownout
+;    Processor resets and test stops for same reason described in (1).
+
+
+; Reset timeout counter and ensure that PWMs are set to off
+send 'p0=0'
+wait '>'
+send 'p1=0'
+wait '>'
+send 'p2=0'
+wait '>'
+send 'p3=0'
+wait '>'
+
+; Enable power to the ESCs
+send 's31=0'
+wait '>'
+
+while 1
+
+call individual_slow_ramp
+call individual_fast_ramp
+call individual_impulse
+call individual_step
+call slow_ramp
+call fast_ramp
+call impulse
+call step
+
+endwhile
+
+;-----------------------------------------------------------------------------
+; 
+:individual_impulse
+send 'p0=9'
+wait '>'
+pause 1
+send 'p0=0'
+wait '>'
+pause 1
+return
+
+
+;-----------------------------------------------------------------------------
+; 
+:individual_step
+send 'g'
+wait '>'
+return
+
+
+;-----------------------------------------------------------------------------
+; 
+:individual_slow_ramp
+send 'g'
+wait '>'
+return
+
+
+;-----------------------------------------------------------------------------
+; 
+:individual_fast_ramp
+send 'g'
+wait '>'
+return
+
+
+;-----------------------------------------------------------------------------
+; This subroutine approximates a ramp function
+:slow_ramp
+send 'g'
+wait '>'
+return
+
+
+;-----------------------------------------------------------------------------
+; This subroutine approximates a ramp function
+:fast_ramp
+send 'g'
+wait '>'
+return
+
+
+;-----------------------------------------------------------------------------
+; This subroutine approximates a series of impulse functions
+:impulse
+send 'g'
+wait '>'
+return
+
+
+;-----------------------------------------------------------------------------
+; This subroutine approximates a step function
+:step
+send 'g'
+wait '>'
+return
+
+
