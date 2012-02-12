@@ -19,6 +19,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
+#ifndef _INTERRUPTS_H_
+#define _INTERRUPTS_H_
+
 #include "qcb.h"
 
 void interrupts_enable(void);
+void interrupts_disable(void);
+
+#endif // _INTERRUPTS_H_

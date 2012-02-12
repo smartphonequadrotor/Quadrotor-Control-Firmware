@@ -19,9 +19,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#include "interrupts.h"
+.code 32
 
-void interrupts_enable(void)
-{
+// Export these for startup.c
+.global interrupts_enable
+.global interrupts_disable
 
-}
+.equ mode_svc, 0x13
+.equ i_bit,    0x80
+.equ f_bit,    0x40
+
+// To be called from non-interrupt code only
+interrupts_enable:
+	msr   cpsr_c, #(mode_svc | 0 | f_bit)
+	bx    lr
+
+// To be called from non-interrupt code only
+interrupts_disable:
+	msr   cpsr_c, #(mode_svc | i_bit | f_bit)
+	bx    lr

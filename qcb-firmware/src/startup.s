@@ -75,7 +75,7 @@ reset_handler:
 	// Set the irq stack (very top)
 	ldr   sp, =__irq_stack_top__
 	// Disable interrupts in supervisor mode
-	msr   cpsr_c, #(mode_svc | 0 | f_bit)
+	msr   cpsr_c, #(mode_svc | i_bit | f_bit)
 	// Set supervisors stack (just below the irq stack)
 	ldr   sp, =__svc_stack_top__
 

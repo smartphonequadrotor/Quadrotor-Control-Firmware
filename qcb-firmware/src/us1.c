@@ -23,9 +23,7 @@ SOFTWARE.
 
 static void us1_irq_handler(void)
 {
-	int i;
-	i = 0;
-	i++;
+	AT91C_BASE_PIOA->PIO_CODR = AT91C_PIO_PA16;
 }
 
 void us1_init(void)
@@ -34,11 +32,14 @@ void us1_init(void)
 	AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_US1);
 
 	// Reset and disable receiver/transmitter
-	AT91C_BASE_US1->US_CR = AT91C_US_RSTRX | AT91C_US_RSTTX | AT91C_US_RXDIS | AT91C_US_TXDIS;
+	AT91C_BASE_US1->US_CR = (
+			AT91C_US_RSTRX | AT91C_US_RSTTX |
+			AT91C_US_RXDIS | AT91C_US_TXDIS
+	);
 
 	// Configure USART mode to be asynchronous 8 bits, no parity, 1 stop
 	AT91C_BASE_US1->US_MR = (
-			AT91C_US_USMODE_NORMAL | // Not RS485 or IrDA
+			AT91C_US_USMODE_HWHSH | // Asynchronous hardware handshaking mode
 			AT91C_US_CLKS_CLOCK | // Use MCK
 			AT91C_US_CHRL_8_BITS |
 			AT91C_US_PAR_NONE | // No parity
@@ -64,8 +65,9 @@ void us1_init(void)
 	AT91C_BASE_AIC->AIC_IECR = (1 << AT91C_ID_US1);
 
 	// Enable peripheral interrupts
-	AT91C_BASE_US1->US_IER = AT91C_US_RXRDY;// | AT91C_US_TXRDY;
+	AT91C_BASE_US1->US_IER = AT91C_US_RXRDY | AT91C_US_TXRDY;
 
-	// Enable both the transmitter and receiver
-	AT91C_BASE_US1->US_CR = AT91C_US_TXEN | AT91C_US_RXEN;
+	// Enable both the receiver
+	// The transmitter isn't enabled until we have something to transmit
+	AT91C_BASE_US1->US_CR = AT91C_US_RXEN;
 }

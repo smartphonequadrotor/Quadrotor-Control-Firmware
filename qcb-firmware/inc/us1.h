@@ -19,6 +19,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
+#ifndef _US1_H_
+#define _US1_H_
+
 #include "qcb.h"
 
 void us1_init(void);
+
+#endif // _US1_H_

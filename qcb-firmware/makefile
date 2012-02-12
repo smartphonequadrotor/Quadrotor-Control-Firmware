@@ -34,7 +34,6 @@ SRC  = src/init.c
 SRC += src/main.c
 SRC += src/pins.c
 SRC += src/us1.c
-SRC += src/interrupts.c
 
 # List C source files here which must be compiled in ARM-Mode.
 # use file-extension c for "c-only"-files
@@ -53,6 +52,7 @@ ASRC =
 
 # List Assembler source files here which must be assembled in ARM-Mode..
 ASRCARM  = src/startup.s
+ASRCARM += src/interrupts.s
 
 # Optimization level, can be [0, 1, 2, 3, s]. 
 # 0 = turn off optimization. s = optimize for size.
@@ -156,7 +156,6 @@ CPLUSPLUS_LIB =
 #    -Map:      create map file
 #    --cref:    add cross reference to  map file
 LDFLAGS = -nostartfiles -Wl,-Map=$(TARGET).map,--cref,--gc-sections
-LDFLAGS += -lc
 LDFLAGS += $(NEWLIBLPC) $(MATH_LIB)
 LDFLAGS += -lc -lgcc 
 LDFLAGS += $(CPLUSPLUS_LIB)

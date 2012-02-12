@@ -30,8 +30,8 @@ int main(void)
 	pins_init();
 	us1_init();
 
-	// Once everything is initialized, enable interrupts globally
-	// Producer type activities should not commence until after this point
+	// Once everything is initialized, enable interrupts globally. Producer
+	// type activities (timers) should not commence until after this point
 	interrupts_enable();
 
 	while(1)

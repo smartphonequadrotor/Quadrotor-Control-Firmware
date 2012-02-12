@@ -36,7 +36,6 @@ SOFTWARE.
 
 /*
  * TODO:
- * Create function for enabling interrupts and have i_bit set in startup.s
  * Implement workaround for errata  detailed in section 40.22.2.1
  */
 

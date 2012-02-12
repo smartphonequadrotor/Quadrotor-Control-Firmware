@@ -22,7 +22,7 @@ SOFTWARE.
 #include "pins.h"
 
 #define GPIO_INPUTS                ( \
-									AT91C_PIO_PA25 | /*Labeled CTS1 but is actually RTS1. Must not be under peripheral control for this reason.*/ \
+/*									AT91C_PIO_PA25 | Labeled CTS1 but is actually RTS1. Must not be under peripheral control for this reason.*/ \
 									AT91C_PIO_PA26 | /*NC*/ \
 									AT91C_PIO_PA27 | AT91C_PIO_PA28 | AT91C_PIO_PA29 | AT91C_PIO_PA30 /*BTN0,BTN1,BTN2,BTN3*/ \
 									)
@@ -31,12 +31,12 @@ SOFTWARE.
 									AT91C_PIO_PA8  | /*BT_EN*/ \
 									AT91C_PIO_PA10 | AT91C_PIO_PA15 | AT91C_PIO_PA20 | AT91C_PIO_PA23 | /*EN_1,EN_2,EN_3,EN_4*/ \
 									AT91C_PIO_PA16 | AT91C_PIO_PA17 | AT91C_PIO_PA18 | AT91C_PIO_PA19 | /*LED0,LED1,LED2,LED3*/ \
-									AT91C_PIO_PA24 | /*Labeled RTS1 but is actually CTS1. Must not be under peripheral control for this reason.*/ \
+/*									AT91C_PIO_PA24 | Labeled RTS1 but is actually CTS1. Must not be under peripheral control for this reason.*/ \
 									AT91C_PIO_PA31 /*PWR_CNTL (to electronic speed controls)*/ \
 									)
 
-#define GPIO_OUTPUT_DEFAULT_LOW    ( \
-									AT91C_PIO_PA24 /*RTS1 (actually CTS1) needs to be low for BT module to transmit*/ \
+#define GPIO_OUTPUT_DEFAULT_LOW    ( 0 \
+/*									AT91C_PIO_PA24 RTS1 (actually CTS1) needs to be low for BT module to transmit*/ \
 									)
 
 #define GPIO_OUTPUT_DEFAULT_HIGH   ( \
@@ -51,7 +51,8 @@ SOFTWARE.
 									AT91C_PIO_PA3  | AT91C_PIO_PA4  | /*SDL, SCL*/  \
 									AT91C_PIO_PA5  | AT91C_PIO_PA6  | /*RXD0,TXD0*/ \
 									AT91C_PIO_PA11 | AT91C_PIO_PA12 | AT91C_PIO_PA13 | AT91C_PIO_PA14 | /*CS0,MISO,MOSI,SPCK*/ \
-									AT91C_PIO_PA21 | AT91C_PIO_PA22   /*RXD0,TXD0*/ \
+									AT91C_PIO_PA21 | AT91C_PIO_PA22 | /*RXD0,TXD0*/ \
+									AT91C_PIO_PA24 | AT91C_PIO_PA25   /*RTS1,CTS1*/ \
 									)
 
 #define PERIPHERAL_B_FUNCTION      ( \
