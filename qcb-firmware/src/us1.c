@@ -48,7 +48,37 @@ static uint8_t rx_buffer_1[MAX_QCFP_PACKET_SIZE];
 
 static void us1_irq_handler(void)
 {
-	AT91C_BASE_PIOA->PIO_CODR = LED_1;
+	uint32_t us1_status = AT91C_BASE_US1->US_CSR;
+
+	// PDC buffer has been filled
+	if(us1_status & AT91C_US_ENDRX)
+	{
+		// This interrupt should be rare, our ping-pong buffers should be
+		// large enough that an entire packet is received before they are
+		// filled.
+	}
+
+	// PDC buffer has been emptied
+	if(us1_status & AT91C_US_ENDTX)
+	{
+		// Check if there is more data to send
+
+		// Set up next tx buffer
+
+		// If no more data, disable transmitter and ENDTX interrupts
+
+	}
+
+	// Rx line has been inactive
+	if(us1_status & AT91C_US_TIMEOUT)
+	{
+		// Start another timeout after more data is received
+		AT91C_BASE_US1->US_CR = AT91C_US_STTTO;
+		// Swap receive buffers
+
+		// Post event to handle received data
+
+	}
 }
 
 void us1_init(void)

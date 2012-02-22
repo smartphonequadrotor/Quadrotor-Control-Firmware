@@ -52,8 +52,8 @@ CPPSRCARM =
 ASRC = 
 
 # List Assembler source files here which must be assembled in ARM-Mode..
-ASRCARM  = src/startup.s
-ASRCARM += src/interrupts.s
+ASRCARM  = asm/startup.s
+ASRCARM += asm/interrupts.s
 
 # Optimization level, can be [0, 1, 2, 3, s]. 
 # 0 = turn off optimization. s = optimize for size.
