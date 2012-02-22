@@ -19,34 +19,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
+#ifndef _SYSTEM_H_
+#define _SYSTEM_H_
+
 #include "qcb.h"
-#include "system.h"
-#include "pins.h"
-#include "us1.h"
-#include "interrupts.h"
 
-int main(void)
-{
-	// Enable peripherals
-	system_init();
-	pins_init();
-	us1_init();
+void system_init(void);
+uint32_t system_uptime(void);
 
-	// Once everything is initialized, enable interrupts globally. Producer
-	// type activities (timers) should not commence until after this point
-	interrupts_enable();
-
-	while(1)
-	{
-		// Button 4 turns on LED 4
-		if(AT91C_BASE_PIOA->PIO_PDSR & BUTTON_4)
-		{
-			AT91C_BASE_PIOA->PIO_SODR = LED_4;
-		}
-		else
-		{
-			AT91C_BASE_PIOA->PIO_CODR = LED_4;
-		}
-	}
-	return 0;
-}
+#endif // _SYSTEM_H_

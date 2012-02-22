@@ -32,6 +32,7 @@ TARGET = qcb-firmware
 # use file-extension c for "c-only"-files
 SRC  = src/init.c
 SRC += src/main.c
+SRC += src/system.c
 SRC += src/pins.c
 SRC += src/us1.c
 

@@ -25,5 +25,6 @@ SOFTWARE.
 #include "qcb.h"
 
 void us1_init(void);
+void us1_send_buffer(uint32_t buffer[], uint16_t length);
 
 #endif // _US1_H_
