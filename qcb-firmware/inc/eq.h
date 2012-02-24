@@ -19,25 +19,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#ifndef _QCB_H_
-#define _QCB_H_
+#ifndef _EQ_H_
+#define _EQ_H_
 
-/*
- * File for QCB specific defines, variables, functions that don't belong
- * anywhere else, and commonly used headers.
- */
+#include "qcb.h"
 
-/* Commonly used headers */
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
+typedef void(*eq_handler)(uint8_t[], uint16_t);
+typedef void(*eq_timer_handler)(void);
 
-/* microcontroller header */
-#include "AT91SAM7S161.h"
+typedef enum
+{
+	eq_timer_periodic,
+	eq_timer_one_shot
+} timer_type_t;
 
-/*
- * TODO:
- * Implement workaround for errata  detailed in section 40.22.2.1
- */
+typedef uint32_t period_t;
 
-#endif // _QCB_H_
+void eq_init(void);
+void eq_post(eq_handler callback, void* buffer, uint16_t buffer_size);
+void eq_post_timer(eq_timer_handler callback, period_t period, timer_type_t type);
+void eq_dispatch(void);
+
+#endif // _EQ_H_

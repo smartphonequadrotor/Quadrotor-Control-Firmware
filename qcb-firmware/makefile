@@ -19,7 +19,7 @@
 # Toolchain prefix (i.e arm-elf -> arm-elf-gcc.exe)
 TCHAIN = arm-none-eabi
 
-USE_THUMB_MODE = YES
+USE_THUMB_MODE = NO
 
 # MCU name, submodel and board
 MCU      = arm7tdmi
@@ -35,6 +35,8 @@ SRC += src/main.c
 SRC += src/system.c
 SRC += src/pins.c
 SRC += src/us1.c
+SRC += src/qcfp.c
+SRC += src/eq.c
 
 # List C source files here which must be compiled in ARM-Mode.
 # use file-extension c for "c-only"-files
@@ -157,9 +159,9 @@ CPLUSPLUS_LIB =
 #    -Map:      create map file
 #    --cref:    add cross reference to  map file
 LDFLAGS = -nostartfiles -Wl,-Map=$(TARGET).map,--cref,--gc-sections
-LDFLAGS += $(NEWLIBLPC) $(MATH_LIB)
-LDFLAGS += -lc -lgcc 
-LDFLAGS += $(CPLUSPLUS_LIB)
+#LDFLAGS += $(NEWLIBLPC) $(MATH_LIB)
+#LDFLAGS += -lc -lgcc 
+#LDFLAGS += $(CPLUSPLUS_LIB)
 LDFLAGS += $(patsubst %,-L%,$(EXTRA_LIBDIRS))
 LDFLAGS += $(patsubst %,-l%,$(EXTRA_LIBS))
 

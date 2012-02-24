@@ -19,25 +19,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#ifndef _QCB_H_
-#define _QCB_H_
+#ifndef _QCFP_H_
+#define _QCFP_H_
 
-/*
- * File for QCB specific defines, variables, functions that don't belong
- * anywhere else, and commonly used headers.
- */
+#include "qcb.h"
 
-/* Commonly used headers */
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
+#define MAX_QCFP_PACKET_SIZE 32
 
-/* microcontroller header */
-#include "AT91SAM7S161.h"
+void qcfp_init(void);
+void qcfp_data_received(uint8_t buffer[], uint16_t buffer_size);
 
-/*
- * TODO:
- * Implement workaround for errata  detailed in section 40.22.2.1
- */
-
-#endif // _QCB_H_
+#endif // _QCFP_H_

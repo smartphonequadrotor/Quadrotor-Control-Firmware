@@ -21,9 +21,8 @@ SOFTWARE.
 
 #include "us1.h"
 #include "pins.h"
-
-// TODO: Move to qcfp.h
-#define MAX_QCFP_PACKET_SIZE 32
+#include "qcfp.h"
+#include "eq.h"
 
 // Defines
 #define US1_RX_TIMEOUT 100 // In bit periods, this corresponds to 10 characters
@@ -42,21 +41,13 @@ static void us1_irq_handler(void);
 // Static variables
 // Ping-pong rx buffers
 static uint8_t rx_buffer_1[MAX_QCFP_PACKET_SIZE];
-//static uint8_t rx_buffer_2[MAX_QCFP_PACKET_SIZE];
+static uint8_t rx_buffer_2[MAX_QCFP_PACKET_SIZE];
 // Transmit circular buffer
 //static circular_buffer_t tx_buffer;
 
 static void us1_irq_handler(void)
 {
 	uint32_t us1_status = AT91C_BASE_US1->US_CSR;
-
-	// PDC buffer has been filled
-	if(us1_status & AT91C_US_ENDRX)
-	{
-		// This interrupt should be rare, our ping-pong buffers should be
-		// large enough that an entire packet is received before they are
-		// filled.
-	}
 
 	// PDC buffer has been emptied
 	if(us1_status & AT91C_US_ENDTX)
@@ -69,15 +60,44 @@ static void us1_irq_handler(void)
 
 	}
 
-	// Rx line has been inactive
-	if(us1_status & AT91C_US_TIMEOUT)
+	// Rx line has been inactive or PDC buffer has been filled
+	if((us1_status & AT91C_US_TIMEOUT) || (us1_status & AT91C_US_ENDRX))
 	{
-		// Start another timeout after more data is received
-		AT91C_BASE_US1->US_CR = AT91C_US_STTTO;
+		if(us1_status & AT91C_US_TIMEOUT)
+		{
+			// Start another timeout after more data is received
+			AT91C_BASE_US1->US_CR = AT91C_US_STTTO;
+		}
+
+		// Note about ENDRX:
+		// This interrupt should be rare, our ping-pong buffers should be
+		// large enough that an entire packet is received before they are
+		// filled.
+
 		// Swap receive buffers
-
-		// Post event to handle received data
-
+		if(AT91C_BASE_PDC_US1->PDC_RPR == (uint32_t)rx_buffer_1)
+		{
+			AT91C_BASE_PDC_US1->PDC_RPR = (uint32_t)rx_buffer_2;
+			// Post event to handle received data
+			eq_post(
+					qcfp_data_received,
+					rx_buffer_1,
+					MAX_QCFP_PACKET_SIZE - AT91C_BASE_PDC_US1->PDC_RCR
+			);
+		}
+		else
+		{
+			// Swap buffers
+			AT91C_BASE_PDC_US1->PDC_RPR = (uint32_t)rx_buffer_1;
+			// Post event to handle received data
+			eq_post(
+					qcfp_data_received,
+					rx_buffer_2,
+					MAX_QCFP_PACKET_SIZE - AT91C_BASE_PDC_US1->PDC_RCR
+			);
+		}
+		// Reset number of bytes available in buffer
+		AT91C_BASE_PDC_US1->PDC_RCR = MAX_QCFP_PACKET_SIZE;
 	}
 }
 

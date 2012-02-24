@@ -23,6 +23,8 @@ SOFTWARE.
 #include "system.h"
 #include "pins.h"
 #include "us1.h"
+#include "eq.h"
+#include "qcfp.h"
 #include "interrupts.h"
 
 int main(void)
@@ -32,21 +34,16 @@ int main(void)
 	pins_init();
 	us1_init();
 
-	// Once everything is initialized, enable interrupts globally. Producer
-	// type activities (timers) should not commence until after this point
+	// Initialize state machines
+	qcfp_init();
+	eq_init();
+
+	// Once everything is initialized, enable interrupts globally
 	interrupts_enable();
 
 	while(1)
 	{
-		// Button 4 turns on LED 4
-		if(AT91C_BASE_PIOA->PIO_PDSR & BUTTON_4)
-		{
-			AT91C_BASE_PIOA->PIO_SODR = LED_4;
-		}
-		else
-		{
-			AT91C_BASE_PIOA->PIO_CODR = LED_4;
-		}
+		eq_dispatch();
 	}
 	return 0;
 }
