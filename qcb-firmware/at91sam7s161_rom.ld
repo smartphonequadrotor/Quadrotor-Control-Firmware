@@ -39,8 +39,8 @@ MEMORY
 __FIRST_IN_RAM = ORIGIN(DATA);
 __stack_top__  = ORIGIN(DATA) + LENGTH(DATA);
 
-svc_stack_size = 512;
-irq_stack_size = 8;
+svc_stack_size = 256;
+irq_stack_size = 8*3*4; /* Levels*registers*word size */
 
 __svc_stack_top__ = __stack_top__ - irq_stack_size;
 __irq_stack_top__ = __stack_top__;

@@ -19,7 +19,7 @@
 # Toolchain prefix (i.e arm-elf -> arm-elf-gcc.exe)
 TCHAIN = arm-none-eabi
 
-USE_THUMB_MODE = NO
+USE_THUMB_MODE = YES
 
 # MCU name, submodel and board
 MCU      = arm7tdmi
@@ -40,7 +40,7 @@ SRC += src/eq.c
 
 # List C source files here which must be compiled in ARM-Mode.
 # use file-extension c for "c-only"-files
-SRCARM = 
+SRCARM = src/interrupts.c
 
 # List C++ source files here.
 # use file-extension cpp for C++-files (use extension .cpp)
@@ -55,7 +55,7 @@ ASRC =
 
 # List Assembler source files here which must be assembled in ARM-Mode..
 ASRCARM  = asm/startup.s
-ASRCARM += asm/interrupts.s
+#ASRCARM += asm/interrupts.s
 
 # Optimization level, can be [0, 1, 2, 3, s]. 
 # 0 = turn off optimization. s = optimize for size.

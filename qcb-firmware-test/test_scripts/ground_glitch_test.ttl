@@ -47,19 +47,28 @@ call step
 
 endwhile
 
-
 ;-----------------------------------------------------------------------------
 ; 
 :motor_test
 
-send 'p0=1'
+send 'p0=2'
 wait '>'
-send 'p1=1'
+pause 4
+send 'p0=4'
 wait '>'
-send 'p2=1'
+pause 4
+send 'p0=7'
 wait '>'
-send 'p3=1'
+pause 4
+send 'p0=9'
 wait '>'
+
+;send 'p1=3'
+;wait '>'
+;send 'p2=3'
+;wait '>'
+;send 'p3=3'
+;wait '>'
 pause 4
 
 return

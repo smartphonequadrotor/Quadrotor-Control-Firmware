@@ -129,23 +129,65 @@ dabort_handler:
 
 irq_handler:
 	// In IRQ mode, first thing to do is save the return address
-	sub   lr, lr, #4
+//	sub   lr, lr, #4
 	// We also need a single register for the irq handler address
-	stmfd sp!, {r0, lr}
+//	stmfd sp!, {r0, lr}
 	// Using r14 (lr) as a temp until branching into the handler
-	ldr   r14, =interrupt_vector_register
+//	ldr   r14, =interrupt_vector_register
 	// Make sure interrupt_vector_register is read and written to support protect mode
-	ldr   r0, [r14]
-	str   r0, [r14]
+//	ldr   r0, [r14]
+//	str   r0, [r14]
 	// Interrupts are executed in supervisor mode with the I bit set
 	// That is, they use the same stack as most everything else and can't be interrupted
-	msr   cpsr_c, #(mode_svc | i_bit | f_bit)
-	mov   lr, pc           // Save return address
-	bx    r0               // Branch to handler
-	msr   cpsr_c, #(mode_irq | i_bit | f_bit)  // Back to irq mode
-	ldr   r0, =end_of_interrupt_register       // Write to the end of interrupt register
-	str   r0, [r0]
-	ldmia sp!, {r0, pc}^    // Restore registers and return to normal program flow
+//	msr   cpsr_c, #(mode_svc | i_bit | f_bit)
+//	mov   lr, pc           // Save return address
+//	bx    r0               // Branch to handler
+//	msr   cpsr_c, #(mode_irq | i_bit | f_bit)  // Back to irq mode
+//	ldr   r0, =end_of_interrupt_register       // Write to the end of interrupt register
+//	str   r0, [r0]
+//	ldmia sp!, {r0, pc}^    // Restore registers and return to normal program flow
+
+/*---- Adjust and save return address on the stack */
+    sub     lr, lr, #4
+    stmfd   sp!, {lr}
+
+/*---- Save r0 and SPSR on the stack */
+    mrs     r14, SPSR
+    stmfd   sp!, {r0, r14}
+
+/*---- Write in the IVR to support Protect mode */
+/*---- No effect in Normal Mode */
+/*---- De-assert NIRQ and clear the source in Protect mode */
+    ldr     r14, =interrupt_vector_register
+    ldr     r0, [r14]
+    str     r0, [r14]
+
+/*---- Enable nested interrupts and switch to Supervisor mode */
+    msr     CPSR_c, #mode_svc
+
+/*---- Save scratch/used registers and LR on the stack */
+    stmfd   sp!, {r1-r3, r12, r14}
+
+/*---- Branch to the routine pointed by AIC_IVR */
+    mov     r14, pc
+    bx      r0
+
+/*---- Restore scratch/used registers and LR from the stack */
+    ldmia   sp!, {r1-r3, r12, r14}
+
+/*---- Disable nested interrupts and switch back to IRQ mode */
+    msr     CPSR_c, #i_bit | mode_irq
+
+/*---- Acknowledge interrupt by writing AIC_EOICR */
+    ldr     r14, =end_of_interrupt_register
+    str     r14, [r14]
+
+/*---- Restore SPSR and r0 from the stack */
+    ldmia   sp!, {r0, r14}
+    msr     SPSR_cxsf, r14
+
+/*---- Return from interrupt handler */
+    ldmia   sp!, {pc}^
 
 fiq_handler:
 	b     fiq_handler
