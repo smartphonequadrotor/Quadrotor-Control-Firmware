@@ -30,13 +30,21 @@ TARGET = qcb-firmware
 
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
+# System and initialization
 SRC  = src/init.c
 SRC += src/main.c
 SRC += src/system.c
 SRC += src/pins.c
+# Drivers
 SRC += src/us1.c
+SRC += src/twi.c
+# State machines
 SRC += src/qcfp.c
 SRC += src/eq.c
+# AT91 lib
+SRC += at91lib/async.c
+SRC += at91lib/twi.c
+SRC += at91lib/twid.c
 
 # List C source files here which must be compiled in ARM-Mode.
 # use file-extension c for "c-only"-files

@@ -19,41 +19,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
+#ifndef _TWI_H_
+#define _TWI_H_
+
 #include "qcb.h"
-#include "system.h"
-#include "pins.h"
-#include "us1.h"
-#include "twi.h"
-#include "eq.h"
-#include "qcfp.h"
-#include "interrupts.h"
 
-int main(void)
-{
-	uint8_t twi_byte;
+#define TWI_GYRO_ADDR  0x68
+#define TWI_ACCEL_ADDR 0x1C
 
-	// Enable peripherals
-	system_init();
-	pins_init();
-	us1_init();
-	twi_init();
+void twi_init(void);
 
-	// Initialize state machines
-	qcfp_init();
-	eq_init();
-
-	// Once everything is initialized, enable interrupts globally
-	interrupts_enable();
-
-	while(1)
-	{
-//		eq_dispatch();
-//		twi_start_single_byte_write(TWI_GYRO_ADDR);//TWI_ACCEL_ADDR);
-//		twi_write_byte(0x27);//0);
-//		twi_start_single_byte_read(TWI_GYRO_ADDR);//TWI_ACCEL_ADDR);
-//		twi_byte = 0x27;
-//		AT91F_TWI_WriteByte(AT91C_BASE_TWI, TWI_GYRO_ADDR, 0, &twi_byte, 1);
-//		AT91F_TWI_ReadByte(AT91C_BASE_TWI, TWI_GYRO_ADDR, 0, &twi_byte, 1);
-	}
-	return 0;
-}
+#endif // _TWI_H_

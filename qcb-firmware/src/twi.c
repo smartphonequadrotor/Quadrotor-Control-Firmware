@@ -19,41 +19,39 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#include "qcb.h"
-#include "system.h"
-#include "pins.h"
-#include "us1.h"
 #include "twi.h"
-#include "eq.h"
-#include "qcfp.h"
-#include "interrupts.h"
+#include "pins.h"
 
-int main(void)
+// http://www.i2c-bus.org/highspeed/
+// HIGH to LOW ratio of 1 to 2
+// These values are for 400KHz clock
+// ((1/400 000) * (1/3) * 48 054 857 - 4 = 36.0457 = CHDIV*2^CKDIV = 9*2^2
+#define TWI_CLOCK_HIGH_DIV  9
+// ((1/400 000) * (2/3) * 48 054 857 - 4 = 76.0914 = CLDIV*2^CKDIV = 19*2^2
+#define TWI_CLOCK_LOW_DIV   19
+
+#define TWI_CLOCK_DIV       2
+
+void twi_init(void)
 {
-	uint8_t twi_byte;
+	// Clock the TWI peripheral
+	AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_TWI);
 
-	// Enable peripherals
-	system_init();
-	pins_init();
-	us1_init();
-	twi_init();
+	// Reset the TWI
+	AT91C_BASE_TWI->TWI_CR = AT91C_TWI_SWRST;
+	//AT91C_BASE_TWI->TWI_RHR;
 
-	// Initialize state machines
-	qcfp_init();
-	eq_init();
+	// Disable master and slave
+	//AT91C_BASE_TWI->TWI_CR = AT91C_TWI_MSDIS;
 
-	// Once everything is initialized, enable interrupts globally
-	interrupts_enable();
+	// Set master mode
+	AT91C_BASE_TWI->TWI_CR = AT91C_TWI_MSEN;
 
-	while(1)
-	{
-//		eq_dispatch();
-//		twi_start_single_byte_write(TWI_GYRO_ADDR);//TWI_ACCEL_ADDR);
-//		twi_write_byte(0x27);//0);
-//		twi_start_single_byte_read(TWI_GYRO_ADDR);//TWI_ACCEL_ADDR);
-//		twi_byte = 0x27;
-//		AT91F_TWI_WriteByte(AT91C_BASE_TWI, TWI_GYRO_ADDR, 0, &twi_byte, 1);
-//		AT91F_TWI_ReadByte(AT91C_BASE_TWI, TWI_GYRO_ADDR, 0, &twi_byte, 1);
-	}
-	return 0;
+	// Configure clock
+	//	AT91C_BASE_TWI.TWI_CWGR = 0;
+	AT91C_BASE_TWI->TWI_CWGR = (
+			(TWI_CLOCK_DIV << 16) |
+			(TWI_CLOCK_LOW_DIV << 8) |
+			TWI_CLOCK_HIGH_DIV
+	);
 }
