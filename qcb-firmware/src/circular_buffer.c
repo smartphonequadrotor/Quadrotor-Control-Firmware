@@ -19,27 +19,46 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#ifndef _QCB_H_
-#define _QCB_H_
+#include "circular_buffer.h"
 
-/*
- * File for QCB specific defines, variables, functions that don't belong
- * anywhere else, and commonly used headers.
- */
+void cb_init(circular_buffer_t* circ_buffer, uint8_t* data_buffer, uint16_t data_buffer_size)
+{
+	circ_buffer->data = data_buffer;
+	circ_buffer->capacity = data_buffer_size;
+	circ_buffer->size = 0;
+	circ_buffer->read_index = 0;
+	circ_buffer->write_index = 0;
+}
 
-/* Commonly used headers */
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
+void cb_add_byte(circular_buffer_t* circ_buffer, uint8_t byte)
+{
+	circ_buffer->data[circ_buffer->write_index++] = byte;
+	if(circ_buffer->write_index == circ_buffer->capacity)
+	{
+		circ_buffer->write_index = 0;
+	}
+}
 
-/* microcontroller header */
-#include "AT91SAM7S161.h"
+void cb_pop_byte(circular_buffer_t* circ_buffer, uint8_t* byte)
+{
+	*byte = circ_buffer->data[circ_buffer->read_index++];
+	if(circ_buffer->read_index == circ_buffer->capacity)
+	{
+		circ_buffer->read_index = 0;
+	}
+}
 
-#define QCB_MCK 48054857
+void cb_remove_bytes(circular_buffer_t* circ_buffer, uint16_t num_bytes)
+{
+	if(circ_buffer->size < num_bytes)
+	{
+		num_bytes = circ_buffer->size;
+	}
+	circ_buffer->size -= num_bytes;
 
-/*
- * TODO:
- * Implement workaround for errata  detailed in section 40.22.2.1
- */
-
-#endif // _QCB_H_
+	circ_buffer->read_index += num_bytes;
+	if(circ_buffer->read_index >= circ_buffer->capacity)
+	{
+		circ_buffer->read_index = (circ_buffer->read_index - circ_buffer->capacity);
+	}
+}

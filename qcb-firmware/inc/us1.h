@@ -24,7 +24,13 @@ SOFTWARE.
 
 #include "qcb.h"
 
+typedef enum us1_error_t
+{
+	US1_SUCCESS,
+	US1_NOT_ENOUGH_ROOM,
+} us1_error_t;
+
 void us1_init(void);
-void us1_send_buffer(uint32_t buffer[], uint16_t length);
+us1_error_t us1_send_buffer(uint8_t buffer[], uint16_t length);
 
 #endif // _US1_H_

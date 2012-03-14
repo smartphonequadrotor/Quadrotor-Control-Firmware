@@ -34,8 +34,8 @@
 //         Headers
 //------------------------------------------------------------------------------
 
-#include <board.h>
-#include <drivers/async/async.h>
+#include "AT91SAM7S161.h"
+#include "at91lib/async.h"
 
 //------------------------------------------------------------------------------
 //         Global definitions

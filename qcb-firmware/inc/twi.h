@@ -23,6 +23,7 @@ SOFTWARE.
 #define _TWI_H_
 
 #include "qcb.h"
+#include "at91lib/twid.h"
 
 #define TWI_GYRO_ADDR  0x68
 #define TWI_ACCEL_ADDR 0x1C

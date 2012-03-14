@@ -19,27 +19,44 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#ifndef _QCB_H_
-#define _QCB_H_
+#ifndef _CIRCULAR_BUFFER_H_
+#define _CIRCULAR_BUFFER_H_
+
+#include "qcb.h"
+
+typedef struct circular_buffer_t
+{
+	uint16_t read_index;
+	uint16_t write_index;
+	uint16_t capacity;
+	uint16_t size;
+	uint8_t* data;
+} circular_buffer_t;
 
 /*
- * File for QCB specific defines, variables, functions that don't belong
- * anywhere else, and commonly used headers.
+ * Initializes circ_buffer with the buffer data_buffer with the size
+ * data_buffer_size.
  */
-
-/* Commonly used headers */
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
-
-/* microcontroller header */
-#include "AT91SAM7S161.h"
-
-#define QCB_MCK 48054857
+void cb_init(circular_buffer_t* circ_buffer, uint8_t* data_buffer, uint16_t data_buffer_size);
 
 /*
- * TODO:
- * Implement workaround for errata  detailed in section 40.22.2.1
+ * Adds the byte byte to the buffer circ_buffer.
+ * ***NOTE***
+ * This function only adds a byte, it does not update any of the fields in the
+ * circular_buffer_t structure. This is left to the caller so that they can
+ * lock the specific critical regions necessary.
  */
+void cb_add_byte(circular_buffer_t* circ_buffer, uint8_t byte);
 
-#endif // _QCB_H_
+/*
+ * Removes a byte from the buffer circ_buffer and places it in *byte.
+ * ***NOTE***
+ * This function only removes a byte, it does not update any of the fields in
+ * the circular_buffer_t structure. This is left to the caller so that they can
+ * lock the specific critical regions necessary.
+ */
+void cb_pop_byte(circular_buffer_t* circ_buffer, uint8_t* byte);
+
+void cb_remove_bytes(circular_buffer_t* circ_buffer, uint16_t num_bytes);
+
+#endif // _CIRCULAR_BUFFER_H_

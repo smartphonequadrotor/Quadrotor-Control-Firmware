@@ -23,9 +23,11 @@ SOFTWARE.
 #include "pins.h"
 #include "qcfp.h"
 #include "eq.h"
+#include "circular_buffer.h"
+#include "interrupts.h"
 
 // Defines
-#define US1_RX_TIMEOUT 100 // In bit periods, this corresponds to 10 characters
+#define US1_RX_TIMEOUT 100 // In bit periods, this corresponds to 10 byte times
 #define US1_INTERRUPT_PRIORITY 0 // No nested interrupts so all priorities should be 0
 // PLL clock is clocked at 18.432*73/14
 // Main clock is clocked at PLL clock/2
@@ -37,13 +39,24 @@ SOFTWARE.
 
 // Static functions
 static void us1_irq_handler(void);
+static void us1_kickstart_tx(void);
+static void us1_setup_tx_buffer(void);
 
 // Static variables
 // Ping-pong rx buffers
 static uint8_t rx_buffer_1[MAX_QCFP_PACKET_SIZE];
 static uint8_t rx_buffer_2[MAX_QCFP_PACKET_SIZE];
+
 // Transmit circular buffer
-//static circular_buffer_t tx_buffer;
+// TODO: Verify sufficient size for tx buffer
+#define TX_BUFFER_LENGTH 4*MAX_QCFP_PACKET_SIZE
+static circular_buffer_t tx_circular_buffer;
+static uint8_t tx_buffer[TX_BUFFER_LENGTH];
+
+// Indicates whether a transmit is currently in progress
+static bool tx_in_progress = false;
+// Counts the last number of bytes sent through the PDC interface
+static uint16_t last_num_bytes_sent;
 
 static void us1_irq_handler(void)
 {
@@ -52,12 +65,22 @@ static void us1_irq_handler(void)
 	// PDC buffer has been emptied
 	if(us1_status & AT91C_US_ENDTX)
 	{
+		// Transmit completed, release the part of the buffer that we using
+		cb_remove_bytes(&tx_circular_buffer, last_num_bytes_sent);
+		last_num_bytes_sent = 0;
+
 		// Check if there is more data to send
-
-		// Set up next tx buffer
-
-		// If no more data, disable transmitter and ENDTX interrupts
-
+		if(tx_circular_buffer.size > 0)
+		{
+			us1_setup_tx_buffer();
+		}
+		else
+		{
+			// No more data, disable transmitter and ENDTX interrupts
+			AT91C_BASE_PDC_US1->PDC_TCR = 0;
+			AT91C_BASE_US1->US_IDR = AT91C_US_ENDTX;
+			tx_in_progress = false;
+		}
 	}
 
 	// Rx line has been inactive or PDC buffer has been filled
@@ -103,7 +126,10 @@ static void us1_irq_handler(void)
 
 void us1_init(void)
 {
-	// US1 initialize
+	// Initialize the transmit buffer
+	cb_init(&tx_circular_buffer, tx_buffer, TX_BUFFER_LENGTH);
+
+	// Initialize US1 peripheral
 	AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_US1);
 
 	// Reset and disable receiver/transmitter
@@ -148,10 +174,73 @@ void us1_init(void)
 
 	// Enable the receiver
 	// The transmitter isn't enabled until we have something to transmit
-	AT91C_BASE_US1->US_CR = AT91C_US_RXEN;
+	AT91C_BASE_US1->US_CR = AT91C_US_RXEN | AT91C_US_TXEN;
 }
 
-void us1_send_buffer(uint32_t buffer[], uint16_t length)
+/*
+ * Adds length bytes from buffer to the transmit circular buffer associated
+ * with the US1 interface. This function relies on the fact that it is the
+ * only function to *add* bytes to the buffer. Which this function is in
+ * progress, bytes may be removed, but not added. This function does not
+ * update the size field of the buffer until after all bytes have been added
+ * to minimize the number of times interrupts must be disabled.
+ */
+us1_error_t us1_send_buffer(uint8_t buffer[], uint16_t length)
 {
+	us1_error_t ret_val = US1_SUCCESS;
+	uint16_t bytes_added = 0;
 
+	if((tx_circular_buffer.size + length) < tx_circular_buffer.capacity)
+	{
+		while(bytes_added != length)
+		{
+			cb_add_byte(&tx_circular_buffer, buffer[bytes_added++]);
+		}
+		// Update the number of bytes in the circular buffer
+		interrupts_disable();
+		tx_circular_buffer.size += length;
+		us1_kickstart_tx();
+		interrupts_enable();
+	}
+	else
+	{
+		ret_val = US1_NOT_ENOUGH_ROOM;
+	}
+	return ret_val;
+}
+
+/*
+ * Starts a transmit on the peripheral if one is not already in progress.
+ * Requires protection from a transmit complete interrupt occurring at the
+ * same time.
+ */
+void us1_kickstart_tx(void)
+{
+	if(!tx_in_progress)
+	{
+		tx_in_progress = true;
+		last_num_bytes_sent = 0;
+		// Enable tx buffer empty interrupts
+		AT91C_BASE_US1->US_IER = AT91C_US_ENDTX;
+	}
+}
+
+/*
+ * Requires there to be data to the transmitted in the circular buffer.
+ */
+void us1_setup_tx_buffer(void)
+{
+	// Set up next tx buffer
+	AT91C_BASE_PDC_US1->PDC_TPR = (uint32_t)&(tx_circular_buffer.data[tx_circular_buffer.read_index]);
+	// Determine the number of bytes to send since only contiguous bytes can be sent
+	if((tx_circular_buffer.capacity - tx_circular_buffer.read_index) < tx_circular_buffer.size)
+	{
+		AT91C_BASE_PDC_US1->PDC_TCR = tx_circular_buffer.capacity - tx_circular_buffer.read_index;
+		last_num_bytes_sent = tx_circular_buffer.capacity - tx_circular_buffer.read_index;
+	}
+	else
+	{
+		AT91C_BASE_PDC_US1->PDC_TCR = tx_circular_buffer.size;
+		last_num_bytes_sent = tx_circular_buffer.size;
+	}
 }

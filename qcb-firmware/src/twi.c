@@ -21,6 +21,7 @@ SOFTWARE.
 
 #include "twi.h"
 #include "pins.h"
+#include "at91lib/twi.h"
 
 // http://www.i2c-bus.org/highspeed/
 // HIGH to LOW ratio of 1 to 2
@@ -37,21 +38,23 @@ void twi_init(void)
 	// Clock the TWI peripheral
 	AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_TWI);
 
-	// Reset the TWI
-	AT91C_BASE_TWI->TWI_CR = AT91C_TWI_SWRST;
-	//AT91C_BASE_TWI->TWI_RHR;
+	TWI_ConfigureMaster(AT91C_BASE_TWI, 400000, QCB_MCK);
 
-	// Disable master and slave
-	//AT91C_BASE_TWI->TWI_CR = AT91C_TWI_MSDIS;
-
-	// Set master mode
-	AT91C_BASE_TWI->TWI_CR = AT91C_TWI_MSEN;
-
-	// Configure clock
-	//	AT91C_BASE_TWI.TWI_CWGR = 0;
-	AT91C_BASE_TWI->TWI_CWGR = (
-			(TWI_CLOCK_DIV << 16) |
-			(TWI_CLOCK_LOW_DIV << 8) |
-			TWI_CLOCK_HIGH_DIV
-	);
+//	// Reset the TWI
+//	AT91C_BASE_TWI->TWI_CR = AT91C_TWI_SWRST;
+//	//AT91C_BASE_TWI->TWI_RHR;
+//
+//	// Disable master and slave
+//	//AT91C_BASE_TWI->TWI_CR = AT91C_TWI_MSDIS;
+//
+//	// Set master mode
+//	AT91C_BASE_TWI->TWI_CR = AT91C_TWI_MSEN;
+//
+//	// Configure clock
+//	//	AT91C_BASE_TWI.TWI_CWGR = 0;
+//	AT91C_BASE_TWI->TWI_CWGR = (
+//			(TWI_CLOCK_DIV << 16) |
+//			(TWI_CLOCK_LOW_DIV << 8) |
+//			TWI_CLOCK_HIGH_DIV
+//	);
 }
