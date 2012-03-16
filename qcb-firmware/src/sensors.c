@@ -22,20 +22,17 @@ SOFTWARE.
 #include "sensors.h"
 #include "twi.h"
 
-uint8_t buffer;
+static void sensor_test(uint8_t buffer[], uint8_t);
 
-static void sensor_test(void);
-
-static void sensor_test(void)
+static void sensor_test(uint8_t buffer[], uint8_t length)
 {
-	int i;
-	i = 0;
+	int i = buffer[0];
 	i++;
 }
 
 void sensors_init(void)
 {
-	twi_read_register(SENSOR_ACCEL_ADDR, 0, &buffer, 1, sensor_test);
+	twi_read_register(SENSOR_ACCEL_ADDR, 0, 1, sensor_test);
 
 	// Initialize accelerometer
 	// Initialize gyroscope

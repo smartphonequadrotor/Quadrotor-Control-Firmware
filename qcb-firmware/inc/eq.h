@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include "qcb.h"
 
-typedef void(*eq_handler)(uint8_t[], uint16_t);
+typedef void(*eq_handler)(uint8_t[], uint8_t);
 typedef void(*eq_timer_handler)(void);
 
 typedef enum
@@ -36,7 +36,7 @@ typedef enum
 typedef uint32_t period_t;
 
 void eq_init(void);
-void eq_post(eq_handler callback, void* buffer, uint16_t buffer_size);
+void eq_post(eq_handler callback, void* buffer, uint8_t buffer_size);
 void eq_post_timer(eq_timer_handler callback, period_t period, timer_type_t type);
 void eq_dispatch(void);
 

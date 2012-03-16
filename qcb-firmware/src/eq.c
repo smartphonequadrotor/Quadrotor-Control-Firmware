@@ -20,24 +20,25 @@ SOFTWARE.
 *****************************************************************************/
 
 #include "eq.h"
-
 #include "interrupts.h"
+#include <string.h>
 
-#define EQ_NUM_EVENTS       32
-#define EQ_NUM_TIMER_EVENTS 32
+#define EQ_MAX_EVENTS        32
+#define EQ_MAX_TIMER_EVENTS  32
+#define EQ_EVENT_BUFFER_SIZE 32
 
 typedef struct eq_event_t
 {
 	eq_handler callback;
-	void* buffer;
-	uint16_t buffer_size;
+	uint8_t buffer[EQ_EVENT_BUFFER_SIZE];
+	uint8_t buffer_size;
 } eq_event_t;
 
 typedef struct eq_event_buffer_t
 {
 	uint8_t read_index;
 	uint8_t write_index;
-	eq_event_t events[EQ_NUM_EVENTS];
+	eq_event_t events[EQ_MAX_EVENTS];
 	uint8_t num_events;
 } eq_event_buffer_t;
 
@@ -50,7 +51,7 @@ typedef struct eq_timer_event_t
 
 typedef struct eq_timer_event_buffer_t
 {
-	eq_timer_event_t events[EQ_NUM_TIMER_EVENTS];
+	eq_timer_event_t events[EQ_MAX_TIMER_EVENTS];
 	uint8_t num_events;
 } eq_timer_event_buffer_t;
 
@@ -62,25 +63,24 @@ void eq_init(void)
 
 }
 
-void eq_post(eq_handler callback, void* buffer, uint16_t buffer_size)
+void eq_post(eq_handler callback, void* buffer, uint8_t buffer_size)
 {
 	uint8_t new_event_index;
 
 	// Check that parameters are acceptable
 	if(	(callback != NULL) &&
-		((buffer == NULL && buffer_size == 0) || (buffer != NULL && buffer_size != 0)))
+		((buffer == NULL && buffer_size == 0) || (buffer != NULL && buffer_size != 0)) &&
+		(buffer_size <= EQ_EVENT_BUFFER_SIZE))
 	{
-		// The fact that we're posting an event means that it is not possible
-		// for an event to be dispatched at the same time.
 		// The only action that needs to occur with interrupts disabled is an
 		// event being reserved in the circular buffer. The actual population
 		// of the event can occur with interrupts enabled.
 		interrupts_disable();
-		if(event_buffer.num_events < EQ_NUM_EVENTS)
+		if(event_buffer.num_events < EQ_MAX_EVENTS)
 		{
 			event_buffer.num_events++;
 			new_event_index = event_buffer.write_index++;
-			if(event_buffer.write_index == EQ_NUM_EVENTS)
+			if(event_buffer.write_index == EQ_MAX_EVENTS)
 			{
 				event_buffer.write_index = 0;
 			}
@@ -88,8 +88,11 @@ void eq_post(eq_handler callback, void* buffer, uint16_t buffer_size)
 		interrupts_enable();
 
 		event_buffer.events[new_event_index].callback = callback;
-		event_buffer.events[new_event_index].buffer = buffer;
 		event_buffer.events[new_event_index].buffer_size = buffer_size;
+		if(buffer_size > 0)
+		{
+			memcpy(event_buffer.events[new_event_index].buffer, buffer, buffer_size);
+		}
 	}
 }
 
@@ -111,7 +114,7 @@ void eq_dispatch(void)
 	{
 		execute_me = event_buffer.events[event_buffer.read_index];
 		event_buffer.read_index++;
-		if(event_buffer.read_index == EQ_NUM_EVENTS)
+		if(event_buffer.read_index == EQ_MAX_EVENTS)
 		{
 			event_buffer.read_index = 0;
 		}

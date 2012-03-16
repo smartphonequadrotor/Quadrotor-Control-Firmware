@@ -37,17 +37,27 @@ SOFTWARE.
 #define TWI_CLOCK_RATE                   400000
 #define TWI_INTERRUPT_PRIORITY           0
 #define TWI_MAX_OUTSTANDING_TRANSACTIONS 10
+// Corresponds to the max size of the buffers in the event queue
+#define TWI_MAX_RX_SIZE                  32
+
+typedef enum twi_mode
+{
+	twi_read,
+	twi_write,
+} twi_mode;
 
 // File local functions
 static void twi_irq_handler(void);
 static void twi_async_callback(Async* a);
+static void twi_add_transaction(uint8_t address, eq_handler cb, uint8_t reg, uint8_t value, uint8_t length, twi_mode mode);
 static void twi_kickstart(void);
-static void twi_process_next_transfer(uint8_t unused1[], uint16_t unused2);
+static void twi_process_next_transfer(uint8_t unused1[], uint8_t unused2);
 
 // Driver structure
 static Twid twi;
 // Async structure. Invokes default callback upon completion to advance state machine
 static Async twi_async = {0, twi_async_callback, {0, 0, 0, 0}};
+static uint8_t twi_buffer[TWI_MAX_RX_SIZE]; // Used for reads. After a read completes, data is posted to the eq
 
 /*
  * Set to false in the interrupt so the next time the twi_process_next_transfer
@@ -57,27 +67,20 @@ static Async twi_async = {0, twi_async_callback, {0, 0, 0, 0}};
  */
 static bool twi_transfer_in_progress = false;
 
-typedef enum twi_mode
-{
-	twi_read,
-	twi_write,
-} twi_mode;
-
 typedef struct twi_transaction
 {
 	uint8_t address;
 	uint8_t data[2]; // Used for writes
-	uint8_t* buffer; // Used for reads
-	uint32_t length;
+	uint8_t length;
 	twi_mode mode;
-	twi_callback callback;
+	eq_handler callback;
 } twi_transaction;
 
 typedef struct twi_transaction_queue
 {
-	uint16_t read_index;
-	uint16_t write_index;
-	uint16_t size;
+	uint8_t read_index;
+	uint8_t write_index;
+	uint8_t size;
 	twi_transaction transactions[TWI_MAX_OUTSTANDING_TRANSACTIONS];
 } twi_transaction_queue;
 
@@ -109,57 +112,30 @@ void twi_init(void)
 	AT91C_BASE_AIC->AIC_IECR = (1 << AT91C_ID_TWI);
 }
 
-void twi_write_register(uint8_t address, uint8_t reg, uint8_t value, twi_callback cb)
+void twi_write_register(uint8_t address, uint8_t reg, uint8_t value, eq_handler cb)
 {
-	twi_transaction new_transaction;
 	if(twi_events.size < TWI_MAX_OUTSTANDING_TRANSACTIONS)
 	{
-		new_transaction.address = address;
-		new_transaction.buffer = NULL;
-		new_transaction.callback = cb;
-		new_transaction.data[0] = reg;
-		new_transaction.data[1] = value;
-		new_transaction.length = 2; // Register and 1 data byte
-		new_transaction.mode = twi_write;
-		twi_events.transactions[twi_events.write_index++] = new_transaction;
-		if(twi_events.write_index >= TWI_MAX_OUTSTANDING_TRANSACTIONS)
-		{
-			twi_events.write_index = 0;
-		}
-		twi_events.size++;
+		twi_add_transaction(address, cb, reg, value, 2, twi_write);
 		twi_kickstart();
 	}
 }
 
-void twi_read_register(uint8_t address, uint8_t reg, uint8_t* buffer, uint16_t num_bytes, twi_callback cb)
+void twi_read_register(uint8_t address, uint8_t reg, uint8_t num_bytes, eq_handler cb)
 {
-	twi_transaction new_transaction;
+	if(num_bytes > TWI_MAX_RX_SIZE)
+	{
+		return;
+	}
+
 	// size+1 since we need space for two transactions, a register write and a read
 	if((twi_events.size + 1) < TWI_MAX_OUTSTANDING_TRANSACTIONS)
 	{
-		new_transaction.address = address;
-		new_transaction.buffer = NULL;
-		new_transaction.callback = NULL;
-		new_transaction.data[0] = reg;
-		new_transaction.length = 1; // Write only register
-		new_transaction.mode = twi_write;
-		twi_events.transactions[twi_events.write_index++] = new_transaction;
-		if(twi_events.write_index >= TWI_MAX_OUTSTANDING_TRANSACTIONS)
-		{
-			twi_events.write_index = 0;
-		}
-
-		new_transaction.address = address;
-		new_transaction.buffer = buffer;
-		new_transaction.callback = cb;
-		new_transaction.length = num_bytes; // Register and 1 data byte
-		new_transaction.mode = twi_read;
-		twi_events.transactions[twi_events.write_index++] = new_transaction;
-		if(twi_events.write_index >= TWI_MAX_OUTSTANDING_TRANSACTIONS)
-		{
-			twi_events.write_index = 0;
-		}
-		twi_events.size+=2;
+		// Add write register
+		twi_add_transaction(address, NULL, reg, 0, 1, twi_write);
+		// Add read registers
+		twi_add_transaction(address, cb, 0, 0, num_bytes, twi_read);
+		// Start transfers if required
 		twi_kickstart();
 	}
 }
@@ -175,7 +151,22 @@ static void twi_async_callback(Async* unused)
 {
 	if(current_transaction.callback)
 	{
-		current_transaction.callback();
+		if(current_transaction.mode == twi_read)
+		{
+			eq_post(
+					current_transaction.callback,
+					twi_buffer,
+					current_transaction.length
+					);
+		}
+		else
+		{
+			eq_post(
+					current_transaction.callback,
+					NULL,
+					0
+					);
+		}
 	}
 
 	if(twi_events.size > 0)
@@ -186,6 +177,23 @@ static void twi_async_callback(Async* unused)
 	twi_transfer_in_progress = false;
 }
 
+static void twi_add_transaction(uint8_t address, eq_handler cb, uint8_t reg, uint8_t value, uint8_t length, twi_mode mode)
+{
+	twi_transaction new_transaction;
+	new_transaction.address = address;
+	new_transaction.callback = cb;
+	new_transaction.data[0] = reg;
+	new_transaction.data[1] = value;
+	new_transaction.length = length;
+	new_transaction.mode = mode;
+	twi_events.transactions[twi_events.write_index++] = new_transaction;
+	if(twi_events.write_index >= TWI_MAX_OUTSTANDING_TRANSACTIONS)
+	{
+		twi_events.write_index = 0;
+	}
+	twi_events.size++;
+}
+
 // Must be called from main loop. Initializes a transfer if one is not
 // already in progress.
 static void twi_kickstart(void)
@@ -194,7 +202,7 @@ static void twi_kickstart(void)
 }
 
 // Must be called from the main loop.
-static void twi_process_next_transfer(uint8_t unused1[], uint16_t unused2)
+static void twi_process_next_transfer(uint8_t unused1[], uint8_t unused2)
 {
 	if(twi_transfer_in_progress == false)
 	{
@@ -219,7 +227,7 @@ static void twi_process_next_transfer(uint8_t unused1[], uint16_t unused2)
 						current_transaction.address,
 						0,
 						0,
-						current_transaction.buffer,
+						twi_buffer,
 						current_transaction.length,
 						&twi_async
 						);

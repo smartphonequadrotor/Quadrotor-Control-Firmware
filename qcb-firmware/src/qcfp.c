@@ -21,18 +21,12 @@ SOFTWARE.
 
 #include "qcfp.h"
 
-
-// REMOVE ME
-#include "us1.h"
-// END REMOVE ME
-
-
 void qcfp_init(void)
 {
 
 }
 
-void qcfp_data_received(uint8_t buffer[], uint16_t buffer_size)
+void qcfp_data_received(uint8_t buffer[], uint8_t buffer_size)
 {
-	us1_send_buffer("test\r\n", 6);
+	// Decode data from buffer
 }

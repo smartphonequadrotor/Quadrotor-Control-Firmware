@@ -23,13 +23,11 @@ SOFTWARE.
 #define _TWI_H_
 
 #include "qcb.h"
-
-typedef void(*twi_callback)(void);
+#include "eq.h"
 
 /*
  * All twi_ functions should be called from the main loop. Provided callbacks
- * will execute at the interrupt level and should do nothing more than post
- * events to the event queue to be run at the main loop level.
+ * will execute at the main loop level through the event queue.
  */
 
 void twi_init(void);
@@ -37,7 +35,7 @@ void twi_init(void);
 /*
  * Reads and write to registers will happen in a FIFO manner.
  */
-void twi_write_register(uint8_t address, uint8_t reg, uint8_t value, twi_callback cb);
-void twi_read_register(uint8_t address, uint8_t reg, uint8_t* buffer, uint16_t num_bytes, twi_callback cb);
+void twi_write_register(uint8_t address, uint8_t reg, uint8_t value, eq_handler cb);
+void twi_read_register(uint8_t address, uint8_t reg, uint8_t num_bytes, eq_handler cb);
 
 #endif // _TWI_H_
