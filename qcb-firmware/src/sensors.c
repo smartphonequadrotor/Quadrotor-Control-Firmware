@@ -19,25 +19,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#ifndef _TWI_H_
-#define _TWI_H_
+#include "sensors.h"
+#include "twi.h"
 
-#include "qcb.h"
+uint8_t buffer;
 
-typedef void(*twi_callback)(void);
+static void sensor_test(void);
 
-/*
- * All twi_ functions should be called from the main loop. Provided callbacks
- * will execute at the interrupt level and should do nothing more than post
- * events to the event queue to be run at the main loop level.
- */
+static void sensor_test(void)
+{
+	int i;
+	i = 0;
+	i++;
+}
 
-void twi_init(void);
+void sensors_init(void)
+{
+	twi_read_register(SENSOR_ACCEL_ADDR, 0, &buffer, 1, sensor_test);
 
-/*
- * Reads and write to registers will happen in a FIFO manner.
- */
-void twi_write_register(uint8_t address, uint8_t reg, uint8_t value, twi_callback cb);
-void twi_read_register(uint8_t address, uint8_t reg, uint8_t* buffer, uint16_t num_bytes, twi_callback cb);
-
-#endif // _TWI_H_
+	// Initialize accelerometer
+	// Initialize gyroscope
+	// Initialize magnetometer
+}

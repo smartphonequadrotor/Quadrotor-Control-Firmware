@@ -41,6 +41,7 @@ SRC += src/twi.c
 # State machines
 SRC += src/qcfp.c
 SRC += src/eq.c
+SRC += src/sensors.c
 # Data structures
 SRC += src/circular_buffer.c
 # AT91 lib
