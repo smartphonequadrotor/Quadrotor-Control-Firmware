@@ -25,7 +25,7 @@ SOFTWARE.
 #include "qcb.h"
 
 // Corresponds to the max size of the buffers in the event queue
-#define MAX_QCFP_PACKET_SIZE 32
+#define QCFP_MAX_PACKET_SIZE 32
 
 void qcfp_init(void);
 void qcfp_data_received(uint8_t buffer[], uint8_t buffer_size);

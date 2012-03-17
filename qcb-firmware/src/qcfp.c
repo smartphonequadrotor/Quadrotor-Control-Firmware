@@ -20,6 +20,11 @@ SOFTWARE.
 *****************************************************************************/
 
 #include "qcfp.h"
+#include "eq.h"
+
+#define COBS_TERM_BYTE (0)
+
+static void qcfp_handle_packet(uint8_t packet[], uint8_t length);
 
 void qcfp_init(void)
 {
@@ -28,5 +33,88 @@ void qcfp_init(void)
 
 void qcfp_data_received(uint8_t buffer[], uint8_t buffer_size)
 {
+	typedef enum cobs_state
+	{
+		cobs_decode,
+		cobs_copy,
+		cobs_sync,
+	} cobs_state;
+
+	static cobs_state decode_state = cobs_sync;
+	static uint8_t incoming_packet[QCFP_MAX_PACKET_SIZE+2]; // Extra space in case of overflow
+	static uint8_t packet_size = 0; // Counts packet size
+	static uint8_t byte_count = 0; // Counts number of encoded bytes
+
+	int i;
+
 	// Decode data from buffer
+	for(i = 0; i < buffer_size; i++)
+	{
+		if(packet_size > QCFP_MAX_PACKET_SIZE)
+		{
+			decode_state = cobs_sync;
+		}
+
+		switch(decode_state)
+		{
+		case cobs_decode:
+			if(buffer[i] == COBS_TERM_BYTE)
+			{
+				if(packet_size > 0)
+				{
+					eq_post(qcfp_handle_packet, incoming_packet, packet_size);
+				}
+				packet_size = 0;
+				byte_count = 0;
+			}
+			else
+			{
+				byte_count = buffer[i];
+				decode_state = cobs_copy;
+			}
+			break;
+		case cobs_copy:
+			if(buffer[i] == COBS_TERM_BYTE)
+			{
+				// Got a zero when expecting data, re-sync
+				byte_count = 0;
+				packet_size = 0;
+				decode_state = cobs_decode;
+			}
+			else
+			{
+				if(byte_count > 1)
+				{
+					incoming_packet[packet_size++] = buffer[i];
+					byte_count--;
+				}
+				else // byte_count == 1
+				{
+					incoming_packet[packet_size++] = buffer[i];
+					byte_count--;
+					// We add two bytes to the packet here which could result in the packet
+					// being larger than the max size which is why the packet has a couple of
+					// extra bytes in it
+					incoming_packet[packet_size++] = 0;
+					decode_state = cobs_decode;
+				}
+			}
+			break;
+		case cobs_sync:
+		default:
+			packet_size = 0;
+			byte_count = 0;
+			if(buffer[i] == COBS_TERM_BYTE)
+			{
+				decode_state = cobs_decode;
+			}
+			break;
+		}
+	}
+}
+
+static void qcfp_handle_packet(uint8_t packet[], uint8_t length)
+{
+	int i = 0;
+	i++;
 }

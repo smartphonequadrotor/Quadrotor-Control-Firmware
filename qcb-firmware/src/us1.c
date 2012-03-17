@@ -44,12 +44,13 @@ static void us1_setup_tx_buffer(void);
 
 // Static variables
 // Ping-pong rx buffers
-static uint8_t rx_buffer_1[MAX_QCFP_PACKET_SIZE];
-static uint8_t rx_buffer_2[MAX_QCFP_PACKET_SIZE];
+static uint8_t rx_buffer_1[QCFP_MAX_PACKET_SIZE];
+static uint8_t rx_buffer_2[QCFP_MAX_PACKET_SIZE];
+static uint8_t* current_buffer = rx_buffer_1;
 
 // Transmit circular buffer
 // TODO: Verify sufficient size for tx buffer
-#define TX_BUFFER_LENGTH 4*MAX_QCFP_PACKET_SIZE
+#define TX_BUFFER_LENGTH 4*QCFP_MAX_PACKET_SIZE
 static circular_buffer_t tx_circular_buffer;
 static uint8_t tx_buffer[TX_BUFFER_LENGTH];
 
@@ -98,29 +99,32 @@ static void us1_irq_handler(void)
 		// filled.
 
 		// Swap receive buffers
-		if(AT91C_BASE_PDC_US1->PDC_RPR == (uint32_t)rx_buffer_1)
+		if(current_buffer == (uint32_t)rx_buffer_1)
 		{
+			// Swap buffers
+			current_buffer = rx_buffer_2;
 			AT91C_BASE_PDC_US1->PDC_RPR = (uint32_t)rx_buffer_2;
 			// Post event to handle received data
 			eq_post(
 					qcfp_data_received,
 					rx_buffer_1,
-					MAX_QCFP_PACKET_SIZE - AT91C_BASE_PDC_US1->PDC_RCR
+					QCFP_MAX_PACKET_SIZE - AT91C_BASE_PDC_US1->PDC_RCR
 			);
 		}
 		else
 		{
 			// Swap buffers
+			current_buffer = rx_buffer_1;
 			AT91C_BASE_PDC_US1->PDC_RPR = (uint32_t)rx_buffer_1;
 			// Post event to handle received data
 			eq_post(
 					qcfp_data_received,
 					rx_buffer_2,
-					MAX_QCFP_PACKET_SIZE - AT91C_BASE_PDC_US1->PDC_RCR
+					QCFP_MAX_PACKET_SIZE - AT91C_BASE_PDC_US1->PDC_RCR
 			);
 		}
 		// Reset number of bytes available in buffer
-		AT91C_BASE_PDC_US1->PDC_RCR = MAX_QCFP_PACKET_SIZE;
+		AT91C_BASE_PDC_US1->PDC_RCR = QCFP_MAX_PACKET_SIZE;
 	}
 }
 
@@ -158,7 +162,7 @@ void us1_init(void)
 	// Configure the US1 DMA controller
 	// Setting an rx buffer clears the endrx flag
 	AT91C_BASE_PDC_US1->PDC_RPR = (uint32_t)rx_buffer_1;
-	AT91C_BASE_PDC_US1->PDC_RCR = MAX_QCFP_PACKET_SIZE;
+	AT91C_BASE_PDC_US1->PDC_RCR = QCFP_MAX_PACKET_SIZE;
 	// Enable PDC transfers
 	// Rx and tx are enabled. In the case of tx, no transfers will occur
 	// until a pointer is set and the US1 tx interrupts enabled
