@@ -24,6 +24,9 @@ SOFTWARE.
 
 #include "qcb.h"
 
+#define SYSTEM_1_MS    1
+#define SYSTEM_1_S     1000
+
 void system_init(void);
 uint32_t system_uptime(void);
 

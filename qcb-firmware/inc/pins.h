@@ -30,18 +30,6 @@ SOFTWARE.
 
 #include "qcb.h"
 
-/* Define user friendly names for buttons */
-#define BUTTON_1    AT91C_PIO_PA27
-#define BUTTON_2    AT91C_PIO_PA28
-#define BUTTON_3    AT91C_PIO_PA29
-#define BUTTON_4    AT91C_PIO_PA30
-
-/* Define user friendly names for LEDs */
-#define LED_1       AT91C_PIO_PA16
-#define LED_2       AT91C_PIO_PA17
-#define LED_3       AT91C_PIO_PA18
-#define LED_4       AT91C_PIO_PA19
-
 /*
  *  Function that initializes the pins of the QCB.
  */

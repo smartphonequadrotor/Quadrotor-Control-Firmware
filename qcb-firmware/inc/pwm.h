@@ -19,16 +19,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#ifndef _QCFP_H_
-#define _QCFP_H_
+#ifndef _PWM_H_
+#define _PWM_H_
 
 #include "qcb.h"
 
-// Corresponds to the max size of the buffers in the event queue
-#define QCFP_MAX_PACKET_SIZE 32
+typedef enum pwm_motor
+{
+	pwm_motor0 = 0,
+	pwm_motor1 = 1,
+	pwm_motor2 = 2,
+	pwm_motor3 = 3,
+} pwm_motor;
 
-void qcfp_init(void);
-void qcfp_data_received(uint8_t buffer[], uint8_t buffer_size);
-void qcfp_send_data(uint8_t buffer[], uint8_t buffer_size);
+void pwm_init(void);
+void pwm_set(pwm_motor m, uint8_t value);
 
-#endif // _QCFP_H_
+#endif // _PWM_H_

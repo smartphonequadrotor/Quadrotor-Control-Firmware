@@ -21,6 +21,7 @@ SOFTWARE.
 
 #include "eq.h"
 #include "interrupts.h"
+#include "system.h"
 #include <string.h>
 
 #define EQ_MAX_EVENTS        32
@@ -46,21 +47,24 @@ typedef struct eq_timer_event_t
 {
 	eq_timer_handler callback;
 	period_t period;
+	uint32_t last_execution;
 	timer_type_t type;
 } eq_timer_event_t;
 
 typedef struct eq_timer_event_buffer_t
 {
 	eq_timer_event_t events[EQ_MAX_TIMER_EVENTS];
+	bool used_events[EQ_MAX_TIMER_EVENTS];
 	uint8_t num_events;
 } eq_timer_event_buffer_t;
 
 static eq_event_buffer_t event_buffer;
-//static eq_timer_event_buffer_t timer_event_buffer;
+static eq_timer_event_buffer_t timer_event_buffer;
+static uint32_t eq_timer_last_time;
 
 void eq_init(void)
 {
-
+	eq_timer_last_time = system_uptime();
 }
 
 void eq_post(eq_handler callback, void* buffer, uint8_t buffer_size)
@@ -96,9 +100,43 @@ void eq_post(eq_handler callback, void* buffer, uint8_t buffer_size)
 	}
 }
 
+/*
+ * Timer events can be posted from any run level and will always execute
+ * at the main loop level.
+ */
 void eq_post_timer(eq_timer_handler callback, uint32_t period, timer_type_t type)
 {
+	int i;
+	uint8_t timer_index;
 
+	interrupts_disable();
+	if(timer_event_buffer.num_events >= EQ_MAX_TIMER_EVENTS)
+	{
+		interrupts_enable();
+		return;
+	}
+
+	for(i = 0; i < EQ_MAX_TIMER_EVENTS; i++)
+	{
+		if(timer_event_buffer.used_events[i] == false)
+		{
+			timer_index = i;
+			break;
+		}
+	}
+
+	if(i == EQ_MAX_TIMER_EVENTS)
+	{
+		interrupts_enable();
+		return;
+	}
+
+	timer_event_buffer.events[timer_index].callback = callback;
+	timer_event_buffer.events[timer_index].period = period;
+	timer_event_buffer.events[timer_index].type = type;
+	timer_event_buffer.used_events[timer_index] = true;
+	timer_event_buffer.num_events++;
+	interrupts_enable();
 }
 
 void eq_dispatch(void)
@@ -127,5 +165,33 @@ void eq_dispatch(void)
 
 		// Execute the event
 		execute_me.callback(execute_me.buffer, execute_me.buffer_size);
+	}
+}
+
+void eq_dispatch_timers(void)
+{
+	int i;
+	uint32_t now = system_uptime();
+
+	if(eq_timer_last_time < now)
+	{
+		for(i = 0; i < EQ_MAX_TIMER_EVENTS; i++)
+		{
+			if(timer_event_buffer.used_events[i])
+			{
+				if((timer_event_buffer.events[i].last_execution + timer_event_buffer.events[i].period) <= now)
+				{
+					timer_event_buffer.events[i].callback();
+					if(timer_event_buffer.events[i].type == eq_timer_one_shot)
+					{
+						timer_event_buffer.used_events[i] = false;
+					}
+					else
+					{
+						timer_event_buffer.events[i].last_execution = now;
+					}
+				}
+			}
+		}
 	}
 }

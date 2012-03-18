@@ -38,6 +38,8 @@ SRC += src/pins.c
 # Drivers
 SRC += src/us1.c
 SRC += src/twi.c
+SRC += src/pwm.c
+SRC += src/gpio.c
 # State machines
 SRC += src/qcfp.c
 SRC += src/eq.c

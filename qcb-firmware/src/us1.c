@@ -99,7 +99,7 @@ static void us1_irq_handler(void)
 		// filled.
 
 		// Swap receive buffers
-		if(current_buffer == (uint32_t)rx_buffer_1)
+		if(current_buffer == rx_buffer_1)
 		{
 			// Swap buffers
 			current_buffer = rx_buffer_2;

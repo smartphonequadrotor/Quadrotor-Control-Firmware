@@ -39,5 +39,6 @@ void eq_init(void);
 void eq_post(eq_handler callback, void* buffer, uint8_t buffer_size);
 void eq_post_timer(eq_timer_handler callback, period_t period, timer_type_t type);
 void eq_dispatch(void);
+void eq_dispatch_timers(void);
 
 #endif // _EQ_H_

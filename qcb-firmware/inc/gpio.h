@@ -19,16 +19,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#ifndef _QCFP_H_
-#define _QCFP_H_
+#ifndef _GPIO_H_
+#define _GPIO_H_
 
 #include "qcb.h"
 
-// Corresponds to the max size of the buffers in the event queue
-#define QCFP_MAX_PACKET_SIZE 32
+/* Define user friendly names for buttons */
+#define BUTTON_1    AT91C_PIO_PA27
+#define BUTTON_2    AT91C_PIO_PA28
+#define BUTTON_3    AT91C_PIO_PA29
+#define BUTTON_4    AT91C_PIO_PA30
 
-void qcfp_init(void);
-void qcfp_data_received(uint8_t buffer[], uint8_t buffer_size);
-void qcfp_send_data(uint8_t buffer[], uint8_t buffer_size);
+typedef enum gpio_led
+{
+	gpio_led_1 = AT91C_PIO_PA16,
+	gpio_led_2 = AT91C_PIO_PA17,
+	gpio_led_3 = AT91C_PIO_PA18,
+	gpio_led_4 = AT91C_PIO_PA19,
+} gpio_led;
 
-#endif // _QCFP_H_
+void gpio_set_escs(bool on);
+void gpio_set_leds(uint32_t leds);
+void gpio_clear_leds(uint32_t leds);
+
+#endif // _GPIO_H_

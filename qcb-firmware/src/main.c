@@ -53,6 +53,7 @@ int main(void)
 	while(1)
 	{
 		eq_dispatch();
+		eq_dispatch_timers();
 	}
 	return 0;
 }

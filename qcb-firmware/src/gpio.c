@@ -19,16 +19,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#ifndef _QCFP_H_
-#define _QCFP_H_
+#include "gpio.h"
 
-#include "qcb.h"
+#define led_mask (gpio_led_1 | gpio_led_2 | gpio_led_3 | gpio_led_4)
 
-// Corresponds to the max size of the buffers in the event queue
-#define QCFP_MAX_PACKET_SIZE 32
+void gpio_set_escs(bool on)
+{
+	if(on)
+	{
+		AT91C_BASE_PIOA->PIO_CODR = AT91C_PIO_PA31;
+	}
+	else
+	{
+		AT91C_BASE_PIOA->PIO_SODR = AT91C_PIO_PA31;
+	}
+}
 
-void qcfp_init(void);
-void qcfp_data_received(uint8_t buffer[], uint8_t buffer_size);
-void qcfp_send_data(uint8_t buffer[], uint8_t buffer_size);
+void gpio_set_leds(uint32_t leds)
+{
+	AT91C_BASE_PIOA->PIO_CODR = (leds & led_mask);
+}
 
-#endif // _QCFP_H_
+void gpio_clear_leds(uint32_t leds)
+{
+	AT91C_BASE_PIOA->PIO_SODR = (leds & led_mask);
+}
