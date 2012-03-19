@@ -26,9 +26,10 @@ SOFTWARE.
 #include "us1.h"
 #include "gpio.h"
 
-// Max encoded packet size includes an extra byte at the start and end
+// Max encoded packet size includes an extra byte at the start and end and
+// up to 1 additional byte of overhead
 // An encoded packet will never exceed 255 bytes
-#define QCFP_MAX_ENCODED_PACKET_SIZE (QCFP_MAX_PACKET_SIZE+2)
+#define QCFP_MAX_ENCODED_PACKET_SIZE (QCFP_MAX_PACKET_SIZE+3)
 #define QCFP_ASYNC_DATA          0x10
 #define QCFP_CALIBRATE_QUADROTOR 0x40
 #define QCFP_FLIGHT_MODE         0x41
@@ -61,32 +62,32 @@ void qcfp_data_received(uint8_t buffer[], uint8_t buffer_size)
 {
 	typedef enum cobs_state
 	{
-		cobs_decode,
-		cobs_copy,
-		cobs_sync,
+		COBS_DECODE,
+		COBS_COPY,
+		COBS_SYNC,
 	} cobs_state;
 
-	static cobs_state decode_state = cobs_sync;
-	static uint8_t incoming_packet[QCFP_MAX_PACKET_SIZE]; // Extra space in case of overflow
+	static cobs_state decode_state = COBS_SYNC;
+	static uint8_t incoming_packet[QCFP_MAX_PACKET_SIZE];
 	static uint8_t packet_size = 0; // Counts packet size
 	static uint8_t byte_count = 0; // Counts number of encoded bytes
 
-	int i;
+	int i; // Must be signed because of i-- operation
 
 	// Decode data from buffer
 	for(i = 0; i < buffer_size; i++)
 	{
 		if(packet_size > QCFP_MAX_PACKET_SIZE)
 		{
-			decode_state = cobs_sync;
+			decode_state = COBS_SYNC;
 		}
 
 		switch(decode_state)
 		{
-		case cobs_decode:
+		case COBS_DECODE:
 			if(buffer[i] == COBS_TERM_BYTE)
 			{
-				if(packet_size > 0)
+				if((packet_size > 0) && (byte_count == 0))
 				{
 					eq_post(qcfp_handle_packet, incoming_packet, packet_size);
 				}
@@ -96,39 +97,43 @@ void qcfp_data_received(uint8_t buffer[], uint8_t buffer_size)
 			else
 			{
 				byte_count = buffer[i];
-				decode_state = cobs_copy;
+				decode_state = COBS_COPY;
 			}
 			break;
-		case cobs_copy:
-			if(buffer[i] == COBS_TERM_BYTE)
+		case COBS_COPY:
+			if(byte_count == 1)
 			{
-				// Got a zero when expecting data, re-sync
-				byte_count = 0;
-				packet_size = 0;
-				decode_state = cobs_decode;
+				incoming_packet[packet_size++] = 0;
+				i--;
+				byte_count--;
+				decode_state = COBS_DECODE;
 			}
 			else
 			{
-				if(byte_count > 1)
+				if(buffer[i] == COBS_TERM_BYTE)
 				{
-					incoming_packet[packet_size++] = buffer[i];
-					byte_count--;
+					// Got a zero when expecting data, re-sync
+					byte_count = 0;
+					packet_size = 0;
+					decode_state = COBS_DECODE;
 				}
-				else // byte_count == 1
+				else
 				{
-					incoming_packet[packet_size++] = 0;
-					byte_count--;
-					decode_state = cobs_decode;
+					if(byte_count > 1)
+					{
+						incoming_packet[packet_size++] = buffer[i];
+						byte_count--;
+					}
 				}
 			}
 			break;
-		case cobs_sync:
+		case COBS_SYNC:
 		default:
 			packet_size = 0;
 			byte_count = 0;
 			if(buffer[i] == COBS_TERM_BYTE)
 			{
-				decode_state = cobs_decode;
+				decode_state = COBS_DECODE;
 			}
 			break;
 		}
@@ -138,8 +143,13 @@ void qcfp_data_received(uint8_t buffer[], uint8_t buffer_size)
 void qcfp_send_data(uint8_t buffer[], uint8_t buffer_size)
 {
 	uint8_t encoded_data[QCFP_MAX_ENCODED_PACKET_SIZE];
-	uint8_t encoded_data_index = 2;
-	uint8_t i, chunk_index = 1, byte_count = 0;
+	uint8_t encoded_data_index = 1, chunk_index = 1, byte_count = 1;
+	uint8_t i;
+
+	if(buffer_size > QCFP_MAX_PACKET_SIZE)
+	{
+		return;
+	}
 
 	// First byte is always 0
 	encoded_data[0] = 0;
@@ -149,17 +159,22 @@ void qcfp_send_data(uint8_t buffer[], uint8_t buffer_size)
 		if(buffer[i] == COBS_TERM_BYTE)
 		{
 			encoded_data[chunk_index] = byte_count;
-			chunk_index = encoded_data_index++;
+			chunk_index = ++encoded_data_index;
 			byte_count = 0;
 		}
 		else
 		{
-			encoded_data[encoded_data_index++] = buffer[i];
+			encoded_data[++encoded_data_index] = buffer[i];
 		}
 	}
-	encoded_data[chunk_index] = byte_count;
 
-	encoded_data[encoded_data_index++] = 0;
+	if(byte_count > 1)
+	{
+		encoded_data[chunk_index] = byte_count;
+		encoded_data_index++;
+	}
+
+	encoded_data[++encoded_data_index] = 0;
 	us1_send_buffer(encoded_data, encoded_data_index);
 }
 

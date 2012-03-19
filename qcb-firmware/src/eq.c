@@ -54,7 +54,7 @@ typedef struct eq_timer_event_t
 typedef struct eq_timer_event_buffer_t
 {
 	eq_timer_event_t events[EQ_MAX_TIMER_EVENTS];
-	bool used_events[EQ_MAX_TIMER_EVENTS];
+	bool event_used[EQ_MAX_TIMER_EVENTS];
 	uint8_t num_events;
 } eq_timer_event_buffer_t;
 
@@ -118,7 +118,7 @@ void eq_post_timer(eq_timer_handler callback, uint32_t period, timer_type_t type
 
 	for(i = 0; i < EQ_MAX_TIMER_EVENTS; i++)
 	{
-		if(timer_event_buffer.used_events[i] == false)
+		if(timer_event_buffer.event_used[i] == false)
 		{
 			timer_index = i;
 			break;
@@ -133,8 +133,9 @@ void eq_post_timer(eq_timer_handler callback, uint32_t period, timer_type_t type
 
 	timer_event_buffer.events[timer_index].callback = callback;
 	timer_event_buffer.events[timer_index].period = period;
+	timer_event_buffer.events[timer_index].last_execution = system_uptime();
 	timer_event_buffer.events[timer_index].type = type;
-	timer_event_buffer.used_events[timer_index] = true;
+	timer_event_buffer.event_used[timer_index] = true;
 	timer_event_buffer.num_events++;
 	interrupts_enable();
 }
@@ -177,14 +178,14 @@ void eq_dispatch_timers(void)
 	{
 		for(i = 0; i < EQ_MAX_TIMER_EVENTS; i++)
 		{
-			if(timer_event_buffer.used_events[i])
+			if(timer_event_buffer.event_used[i])
 			{
 				if((timer_event_buffer.events[i].last_execution + timer_event_buffer.events[i].period) <= now)
 				{
 					timer_event_buffer.events[i].callback();
 					if(timer_event_buffer.events[i].type == eq_timer_one_shot)
 					{
-						timer_event_buffer.used_events[i] = false;
+						timer_event_buffer.event_used[i] = false;
 					}
 					else
 					{
