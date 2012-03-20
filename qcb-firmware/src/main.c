@@ -28,6 +28,7 @@ SOFTWARE.
 #include "eq.h"
 #include "qcfp.h"
 #include "interrupts.h"
+#include "gpio.h"
 
 int main(void)
 {
@@ -49,6 +50,8 @@ int main(void)
 	AT91C_BASE_PIOA->PIO_CODR = AT91C_PIO_PA23;
 
 	sensors_init();
+
+	eq_post_timer(gpio_led_dance, 250, eq_timer_periodic);
 
 	while(1)
 	{

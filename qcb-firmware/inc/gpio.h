@@ -41,5 +41,6 @@ typedef enum gpio_led
 void gpio_set_escs(bool on);
 void gpio_set_leds(uint32_t leds);
 void gpio_clear_leds(uint32_t leds);
+void gpio_led_dance(void);
 
 #endif // _GPIO_H_

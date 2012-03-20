@@ -89,6 +89,10 @@ void qcfp_data_received(uint8_t buffer[], uint8_t buffer_size)
 			{
 				if((packet_size > 0) && (byte_count == 0))
 				{
+					if(incoming_packet[packet_size] == COBS_TERM_BYTE)
+					{
+						packet_size--;
+					}
 					eq_post(qcfp_handle_packet, incoming_packet, packet_size);
 				}
 				packet_size = 0;
@@ -172,6 +176,11 @@ void qcfp_send_data(uint8_t buffer[], uint8_t buffer_size)
 	{
 		encoded_data[chunk_index] = byte_count;
 		encoded_data_index++;
+	}
+
+	if(buffer[buffer_size-1] == COBS_TERM_BYTE)
+	{
+		encoded_data[encoded_data_index++] = 1;
 	}
 
 	encoded_data[++encoded_data_index] = 0;
@@ -289,5 +298,13 @@ static bool qcfp_flight_mode_handler(uint8_t payload[], uint8_t length)
 
 static bool qcfp_raw_motor_control_handler(uint8_t payload[], uint8_t length)
 {
-	return false;
+	if(length != 4)
+	{
+		return true;
+	}
+
+	pwm_set(pwm_motor0, payload[0]);
+	pwm_set(pwm_motor1, payload[1]);
+	pwm_set(pwm_motor2, payload[2]);
+	pwm_set(pwm_motor3, payload[3]);
 }
