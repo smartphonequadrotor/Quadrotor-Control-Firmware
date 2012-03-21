@@ -24,10 +24,36 @@ SOFTWARE.
 
 #include "qcb.h"
 
-#define SENSOR_GYRO_ADDR  0x68
-#define SENSOR_ACCEL_ADDR 0x53
-#define SENSOR_MAG_ADDR   0x1E
+#define SENSOR_GYRO_ADDR             0x68
+#define     ITG3200_LPF_ADDR         0x16
+#define         ITG3200_10HZ_LPF     0x1D
+#define     ITG3200_RESET_ADDR       0x3E
+#define         ITG3200_RESET        0x80
+#define         ITG3200_X_GYRO_REF   0x01
+#define     ITG3200_DATAX0_ADDR      0x1D
+#define     ITG3200_DATA_START       ITG3200_DATAX0_ADDR
+#define SENSOR_GYRO_SAMPLE_INTERVAL  20
+#define SENSOR_NUM_GYRO_BYTES        6
+
+#define SENSOR_ACCEL_ADDR            0x53
+#define     ADXL345_BW_RATE_ADDR     0x2C
+#define         ADXL345_RATE_400     0x0C
+#define         ADXL345_RATE_200     0x0B
+#define         ADXL345_RATE_100     0x0A
+#define         ADXL345_RATE_50      0x09
+#define     ADXL345_POWER_CTL_ADDR   0x2D
+#define         ADXL345_MEASURE      (1 << 3)
+#define     ADXL345_DATA_FORMAT_ADDR 0x31
+#define         ADXL345_FULL_RES     0x08
+#define         ADXL345_4G_RANGE     0x01
+#define     ADXL345_DATAX0_ADDR      0x32
+#define     ADXL345_DATA_START       ADXL345_DATAX0_ADDR
+#define SENSOR_ACCEL_SAMPLE_INTERVAL 5
+#define SENSOR_NUM_ACCEL_BYTES       6
+
+#define SENSOR_MAG_ADDR          0x1E
 
 void sensors_init(void);
+void sensors_set_async(bool on);
 
 #endif // _SENSORS_H_

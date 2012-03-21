@@ -25,16 +25,12 @@ SOFTWARE.
 #include "pwm.h"
 #include "us1.h"
 #include "gpio.h"
+#include "sensors.h"
 
 // Max encoded packet size includes an extra byte at the start and end and
 // up to 1 additional byte of overhead
 // An encoded packet will never exceed 255 bytes
 #define QCFP_MAX_ENCODED_PACKET_SIZE (QCFP_MAX_PACKET_SIZE+3)
-#define QCFP_ASYNC_DATA          0x10
-#define QCFP_CALIBRATE_QUADROTOR 0x40
-#define QCFP_FLIGHT_MODE         0x41
-#define QCFP_RAW_MOTOR_CONTROL   0xF0
-#define QCFP_NACK                0xFF
 
 #define COBS_TERM_BYTE (0)
 
@@ -266,24 +262,31 @@ static bool qcfp_flight_mode_handler(uint8_t payload[], uint8_t length)
 				// ESCs have been on long enough to be initialized
 				response_buffer[1] = CMD_41_ENABLED;
 				flight_ready = true;
+				gpio_set_leds(gpio_led_4);
+				sensors_set_async(true);
 			}
 			else
 			{
 				// ESCs need more time to initialize
 				response_buffer[1] = CMD_41_PENDING;
 				flight_ready = false;
+				gpio_clear_leds(gpio_led_4);
 			}
 			break;
 		case CMD_41_DISABLED:
 			gpio_set_escs(false);
+			pwm_set_all(0);
 			esc_enable_time = 0;
 			response_buffer[1] = CMD_41_DISABLED;
 			flight_ready = false;
+			gpio_clear_leds(gpio_led_4);
+			sensors_set_async(false);
 			break;
 		default:
 			nack = true;
 			break;
 		}
+		response_length = 2;
 	}
 	else
 	{
@@ -295,6 +298,8 @@ static bool qcfp_flight_mode_handler(uint8_t payload[], uint8_t length)
 // ===========================================================================
 // 0xF0
 // ===========================================================================
+#define CMD_F0_PWM_NOT_SET 0
+#define CMD_F0_PWM_SET     1
 
 static bool qcfp_raw_motor_control_handler(uint8_t payload[], uint8_t length)
 {
@@ -303,8 +308,20 @@ static bool qcfp_raw_motor_control_handler(uint8_t payload[], uint8_t length)
 		return true;
 	}
 
-	pwm_set(pwm_motor0, payload[0]);
-	pwm_set(pwm_motor1, payload[1]);
-	pwm_set(pwm_motor2, payload[2]);
-	pwm_set(pwm_motor3, payload[3]);
+	if(flight_ready)
+	{
+		pwm_set(pwm_motor0, payload[0]);
+		pwm_set(pwm_motor1, payload[1]);
+		pwm_set(pwm_motor2, payload[2]);
+		pwm_set(pwm_motor3, payload[3]);
+		response_buffer[1] = CMD_F0_PWM_SET;
+	}
+	else
+	{
+		response_buffer[1] = CMD_F0_PWM_NOT_SET;
+	}
+
+	response_length = 2;
+
+	return false;
 }

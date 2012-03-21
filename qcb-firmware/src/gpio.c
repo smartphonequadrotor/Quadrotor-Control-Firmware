@@ -47,12 +47,14 @@ void gpio_clear_leds(uint32_t leds)
 
 void gpio_led_dance(void)
 {
-	static uint32_t state = gpio_led_1;
-	if(state == led_mask)
+	static uint32_t state = true;
+	if(state)
 	{
-		state = gpio_led_1;
+		gpio_set_leds(gpio_led_1);
 	}
-	gpio_set_leds(state);
-	gpio_clear_leds(~state);
-	state = state + gpio_led_1;
+	else
+	{
+		gpio_clear_leds(gpio_led_1);
+	}
+	state = !state;
 }
