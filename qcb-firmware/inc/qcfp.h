@@ -42,5 +42,6 @@ SOFTWARE.
 void qcfp_init(void);
 void qcfp_data_received(uint8_t buffer[], uint8_t buffer_size);
 void qcfp_send_data(uint8_t buffer[], uint8_t buffer_size);
+void qcfp_format_timestamp(uint8_t buffer[]);
 
 #endif // _QCFP_H_

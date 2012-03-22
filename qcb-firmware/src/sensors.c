@@ -33,6 +33,10 @@ static void sensor_gyro_init_complete(uint8_t buffer[], uint8_t length);
 static void sensor_gyro_sample(void);
 static void sensor_gyro_read_complete(uint8_t buffer[], uint8_t length);
 
+static void sensor_mag_init_complete(uint8_t buffer[], uint8_t length);
+static void sensor_mag_sample(void);
+static void sensor_mag_read_complete(uint8_t buffer[], uint8_t length);
+
 void sensors_init(void)
 {
 	// Initialize accelerometer
@@ -67,20 +71,25 @@ static void sensor_accel_sample(void)
 
 static void sensor_accel_read_complete(uint8_t buffer[], uint8_t length)
 {
-	uint8_t async_data_cmd[8];
+	uint8_t async_data_cmd[12];
 	async_data_cmd[0] = QCFP_ASYNC_DATA;
 	async_data_cmd[1] = QCFP_ASYNC_DATA_ACCEL;
-	async_data_cmd[2] = buffer[0];
-	async_data_cmd[3] = buffer[1];
-	async_data_cmd[4] = buffer[2];
-	async_data_cmd[5] = buffer[3];
-	async_data_cmd[6] = buffer[4];
-	async_data_cmd[7] = buffer[5];
-	qcfp_send_data(async_data_cmd, 8);
+	qcfp_format_timestamp(&async_data_cmd[2]);
+	async_data_cmd[6] = buffer[0];
+	async_data_cmd[7] = buffer[1];
+	async_data_cmd[8] = buffer[2];
+	async_data_cmd[9] = buffer[3];
+	async_data_cmd[10] = buffer[4];
+	async_data_cmd[11] = buffer[5];
+	qcfp_send_data(async_data_cmd, 12);
 }
 
 static void sensor_gyro_init_complete(uint8_t buffer[], uint8_t length)
 {
+	// Initialize magnetometer
+	// Starts a single conversion. Default configuration is good otherwise
+	twi_write_register(SENSOR_MAG_ADDR, HMC5843_MODE_ADDR, HMC5843_MODE_SINGLE_CONV, sensor_mag_init_complete);
+
 	// Start sampling gyroscope
 	eq_post_timer(sensor_gyro_sample, SENSOR_GYRO_SAMPLE_INTERVAL, eq_timer_periodic);
 }
@@ -95,14 +104,47 @@ static void sensor_gyro_sample(void)
 
 static void sensor_gyro_read_complete(uint8_t buffer[], uint8_t length)
 {
-	uint8_t async_data_cmd[8];
+	uint8_t async_data_cmd[12];
 	async_data_cmd[0] = QCFP_ASYNC_DATA;
 	async_data_cmd[1] = QCFP_ASYNC_DATA_GYRO;
-	async_data_cmd[2] = buffer[1];
-	async_data_cmd[3] = buffer[0];
-	async_data_cmd[4] = buffer[3];
-	async_data_cmd[5] = buffer[2];
-	async_data_cmd[6] = buffer[5];
-	async_data_cmd[7] = buffer[4];
-	qcfp_send_data(async_data_cmd, 8);
+	qcfp_format_timestamp(&async_data_cmd[2]);
+	async_data_cmd[6] = buffer[1];
+	async_data_cmd[7] = buffer[0];
+	async_data_cmd[8] = buffer[3];
+	async_data_cmd[9] = buffer[2];
+	async_data_cmd[10] = buffer[5];
+	async_data_cmd[11] = buffer[4];
+	qcfp_send_data(async_data_cmd, 12);
+}
+
+static void sensor_mag_init_complete(uint8_t buffer[], uint8_t length)
+{
+	// Start sampling gyroscope
+	eq_post_timer(sensor_mag_sample, SENSOR_MAG_SAMPLE_INTERVAL, eq_timer_periodic);
+}
+
+static void sensor_mag_sample(void)
+{
+	if(sensor_reads_enabled)
+	{
+		// Get the data from the last single conversion
+		twi_read_register(SENSOR_MAG_ADDR, HMC5843_DATA_START, SENSOR_NUM_MAG_BYTES, sensor_mag_read_complete);
+		// Start a new single conversion
+		twi_write_register(SENSOR_MAG_ADDR, HMC5843_MODE_ADDR, HMC5843_MODE_SINGLE_CONV, NULL);
+	}
+}
+
+static void sensor_mag_read_complete(uint8_t buffer[], uint8_t length)
+{
+	uint8_t async_data_cmd[12];
+	async_data_cmd[0] = QCFP_ASYNC_DATA;
+	async_data_cmd[1] = QCFP_ASYNC_DATA_MAG;
+	qcfp_format_timestamp(&async_data_cmd[2]);
+	async_data_cmd[6] = buffer[1];
+	async_data_cmd[7] = buffer[0];
+	async_data_cmd[8] = buffer[3];
+	async_data_cmd[9] = buffer[2];
+	async_data_cmd[10] = buffer[5];
+	async_data_cmd[11] = buffer[4];
+	qcfp_send_data(async_data_cmd, 12);
 }

@@ -183,6 +183,15 @@ void qcfp_send_data(uint8_t buffer[], uint8_t buffer_size)
 	us1_send_buffer(encoded_data, encoded_data_index);
 }
 
+void qcfp_format_timestamp(uint8_t buffer[])
+{
+	uint32_t now = system_uptime();
+	for(int i = 0; i < 4; i++)
+	{
+		buffer[i] = (now >> i*8) & 0x000000FF;
+	}
+}
+
 static void qcfp_handle_packet(uint8_t packet[], uint8_t length)
 {
 	uint8_t* payload;
