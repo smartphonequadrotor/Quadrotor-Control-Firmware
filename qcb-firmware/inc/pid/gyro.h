@@ -24,6 +24,9 @@ SOFTWARE.
 
 #include "qcb.h"
 
+#define SAMPLECOUNT_G 400.0
+
+
 /*
   AeroQuad v3.0.1 - February 2012
   www.AeroQuad.com
@@ -48,7 +51,6 @@ SOFTWARE.
 
 void record_gyro_sample(int16_t x, int16_t y, int16_t z );
 void evaluateGyroRate(void);
-void calibrateGyro(void);
-
+void computeGyroBias(void);
 
 #endif /* GYRO_H_ */

@@ -83,7 +83,7 @@ int main(void)
 	//		read pilot commands
 	//		get height from rangefinder
 	//10Hz:
-	//		magnetometer read to kinematics data for kinematics calculation
+	//		magnetometer heading update using kinematics data
 
 	while(1)
 	{

@@ -63,3 +63,18 @@ void evaluateGyroRate() {
     }
   gyroLastMesuredTime = currentTime;
 }
+
+void computeGyroBias() {
+
+  //TODO: We need to get exactly SAMPLECOUNT_G (400) gyro samples to compute bias.
+  int gyroADC[3];
+  for (uint8_t axis = 0; axis < 3; axis++) {
+	  gyroADC[axis] = ((float)(gyroSample[axis])/SAMPLECOUNT_G);
+    gyroSample[axis] = 0;
+  }
+  gyroSampleCount = 0;
+
+  gyroZero[XAXIS] = gyroADC[XAXIS];
+  gyroZero[YAXIS] = gyroADC[YAXIS];
+  gyroZero[ZAXIS] = gyroADC[ZAXIS];
+}

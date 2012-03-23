@@ -19,10 +19,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#ifndef ACCEL_H_
-#define ACCEL_H_
-
+#include "pid/compass.h"
 #include "qcb.h"
+#include "pid/math.h"
+
 /*
   AeroQuad v3.0.1 - February 2012
   www.AeroQuad.com
@@ -43,11 +43,54 @@ SOFTWARE.
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define SAMPLECOUNT_A 400.0
+float hdgX = 0.0;
+float hdgY = 0.0;
 
-void record_accel_sample(int16_t x, int16_t y, int16_t z );
-void evaluateMetersPerSec(void);
-void computeAccelBias(void);
+float measuredMagX = 0.0;
+float measuredMagY = 0.0;
+float measuredMagZ = 0.0;
 
+float rawMag[3] = {0.0,0.0,0.0};
+float magBias[3] = {0.0,0.0,0.0};
 
-#endif /* ACCEL_H_ */
+void record_compass_sample(int16_t x, int16_t y, int16_t z ){
+	rawMag[XAXIS] = x;
+	rawMag[YAXIS] = y;
+	rawMag[ZAXIS] = z;
+}
+
+void read_compass(float roll, float pitch) {
+
+  measuredMagX = rawMag[XAXIS] + magBias[XAXIS];
+  measuredMagY = rawMag[YAXIS] + magBias[YAXIS];
+  measuredMagZ = rawMag[ZAXIS] + magBias[ZAXIS];
+
+  const float cosRoll =  cos(roll);
+  const float sinRoll =  sin(roll);
+  const float cosPitch = cos(pitch);
+  const float sinPitch = sin(pitch);
+
+  float magX = (float)measuredMagX * cosPitch +
+                     (float)measuredMagY * sinRoll * sinPitch +
+                     (float)measuredMagZ * cosRoll * sinPitch;
+
+  float magY = (float)measuredMagY * cosRoll -
+                     (float)measuredMagZ * sinRoll;
+
+  float tmp  = sqrt(magX * magX + magY * magY);
+
+  hdgX = magX / tmp;
+  hdgY = -magY / tmp;
+}
+
+float getHdgXY(uint8_t axis) {
+  if (axis == XAXIS) {
+    return hdgX;
+  } else {
+    return hdgY;
+  }
+}
+
+int read_compass_raw(uint8_t axis) {
+  return rawMag[axis];
+}

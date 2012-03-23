@@ -70,11 +70,11 @@ void evaluateMetersPerSec() {
 
 void computeAccelBias() {
 
-  //TODO: We need to get exactly SAMPLECOUNT (400) accel samples to compute bias.
+  //TODO: We need to get exactly SAMPLECOUNT_A (400) accel samples to compute bias.
 
 
   for (uint8_t axis = 0; axis < 3; axis++) {
-    meterPerSecSec[axis] = ((float)(accelSample[axis])/SAMPLECOUNT) * accelScaleFactor[axis];
+    meterPerSecSec[axis] = ((float)(accelSample[axis])/SAMPLECOUNT_A) * accelScaleFactor[axis];
     accelSample[axis] = 0;
   }
   accelSampleCount = 0;

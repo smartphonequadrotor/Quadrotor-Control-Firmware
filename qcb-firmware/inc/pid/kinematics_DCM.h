@@ -19,10 +19,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#ifndef ACCEL_H_
-#define ACCEL_H_
-
 #include "qcb.h"
+
+#if !(defined KINEMATICS_DCM_H_) && defined DCM_KIN
+#define KINEMATICS_DCM_H_
+
 /*
   AeroQuad v3.0.1 - February 2012
   www.AeroQuad.com
@@ -43,11 +44,27 @@ SOFTWARE.
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define SAMPLECOUNT_A 400.0
+#define CF 0
+#define KF 1
+#define DCM 2
+#define ARG 3
+#define MARG 4
 
-void record_accel_sample(int16_t x, int16_t y, int16_t z );
-void evaluateMetersPerSec(void);
-void computeAccelBias(void);
+void initializeBaseKinematicsParam(float hdgX, float hdgY);
+void initializeKinematics(float hdgX, float hdgY);
+void matrixUpdate(float p, float q, float r, float G_Dt);
+void normalize(void);
+void driftCorrection(float ax, float ay, float az, float oneG, float magX, float magY);
+void calculateKinematics(float rollRate,           float pitchRate,     float yawRate,
+                         float longitudinalAccel,  float lateralAccel,  float verticalAccel,
+                         float oneG,               float magX,          float magY,
+                         float G_Dt);
+float getGyroUnbias(uint8_t axis);
+void calibrateKinematics(void);
+const float kinematicsGetDegreesHeading(uint8_t axis);
 
+void earthAxisAccels(float ax, float ay, float az, float oneG);
+void argUpdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz, float G_Dt);
+void eulerAngles(void);
 
-#endif /* ACCEL_H_ */
+#endif /* KINEMATICS_DCM_H_ */

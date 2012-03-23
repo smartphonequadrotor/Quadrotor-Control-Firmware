@@ -21,8 +21,14 @@ SOFTWARE.
 
 #include "qcb.h"
 
-#ifndef KINEMATICS_ARG_H_
+#if !(defined KINEMATICS_ARG_H_) && defined ARG_KIN
 #define KINEMATICS_ARG_H_
+
+#define CF 0
+#define KF 1
+#define DCM 2
+#define ARG 3
+#define MARG 4
 
 void initializeBaseKinematicsParam(float hdgX, float hdgY);
 void initializeKinematics(float hdgX, float hdgY);

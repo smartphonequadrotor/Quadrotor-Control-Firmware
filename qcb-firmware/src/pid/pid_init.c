@@ -21,9 +21,12 @@ SOFTWARE.
 
 #include "pid/pid_init.h"
 #include "pid/kinematics_ARG.h"
+#include "pid/kinematics_MARG.h"
+#include "pid/kinematics_DCM.h"
 #include "pid/pid.h"
 #include "pid/math.h"
 #include "pid/tasks.h"
+#include "pid/compass.h"
 #include "eq.h"
 
 
@@ -38,7 +41,12 @@ void pid_init(){
 
 	//(Should) also run zeroIntegralError after all calibrations as well.
 
+	#if defined ARG_KIN || defined DCM_KIN
 	initializeKinematics(1.0, 0.0);  // with no compass (magnetometer), DCM matrix initalizes to a heading of 0 degrees
+	#elif defined MARG_KIN
+	initializeKinematics(getHdgXY(XAXIS), getHdgXY(YAXIS));
+	#endif
+
 	setupFourthOrder(); //initializes the fourth order filter stuff...
 
 	//TODO

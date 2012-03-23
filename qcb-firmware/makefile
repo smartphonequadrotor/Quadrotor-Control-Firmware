@@ -28,6 +28,16 @@ SUBMDL   = at91sam7s128
 # Target file name (without extension).
 TARGET = qcb-firmware
 
+#PID kinematics type... Should one of:
+# 1) ARG_KIN if not using magnetometer
+# 2) MARG_KIN if using magnetometer
+# 3) DCM_KIN if using plain DCM filter using
+#	 		 computed heading values rather
+#			 than integrating  raw values into
+#			 kinematics.
+
+KINEMATICS = DCM_KIN
+
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
 # System and initialization
@@ -52,12 +62,15 @@ SRC += at91lib/twi.c
 SRC += at91lib/twid.c
 # PID fun!
 SRC += src/pid/kinematics_ARG.c
+SRC += src/pid/kinematics_MARG.c
+SRC += src/pid/kinematics_DCM.c
 SRC += src/pid/pid_init.c
 SRC += src/pid/math.c
 SRC += src/pid/pid.c
 SRC += src/pid/tasks.c
 SRC += src/pid/accel.c
 SRC += src/pid/gyro.c
+SRC += src/pid/compass.c
 
 # List C source files here which must be compiled in ARM-Mode.
 # use file-extension c for "c-only"-files
@@ -143,6 +156,7 @@ CFLAGS += -Wredundant-decls -Wreturn-type -Wshadow -Wunused
 CFLAGS += -Wa,-adhlns=$(subst $(suffix $<),.lst,$<) 
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += -Wcast-qual
+CFLAGS += -D$(KINEMATICS)
 
 # flags only for C
 CONLYFLAGS += -Wnested-externs 

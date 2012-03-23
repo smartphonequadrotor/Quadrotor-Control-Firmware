@@ -19,10 +19,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#ifndef ACCEL_H_
-#define ACCEL_H_
+#ifndef COMPASS_H_
+#define COMPASS_H_
 
 #include "qcb.h"
+
 /*
   AeroQuad v3.0.1 - February 2012
   www.AeroQuad.com
@@ -43,11 +44,12 @@ SOFTWARE.
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define SAMPLECOUNT_A 400.0
+void record_compass_sample(int16_t x, int16_t y, int16_t z );
 
-void record_accel_sample(int16_t x, int16_t y, int16_t z );
-void evaluateMetersPerSec(void);
-void computeAccelBias(void);
+void read_compass(float roll, float pitch);
 
+float getHdgXY(uint8_t axis);
 
-#endif /* ACCEL_H_ */
+int read_compass_raw(uint8_t axis);
+
+#endif /* COMPASS_H_ */
