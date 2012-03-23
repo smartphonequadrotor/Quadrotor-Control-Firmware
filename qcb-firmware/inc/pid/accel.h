@@ -47,6 +47,7 @@ SOFTWARE.
 
 void record_accel_sample(int16_t x, int16_t y, int16_t z );
 void evaluateMetersPerSec(void);
+void reset_accel_samples(void);
 void computeAccelBias(void);
 
 

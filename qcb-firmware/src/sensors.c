@@ -24,6 +24,7 @@ SOFTWARE.
 #include "qcfp.h"
 #include "pid/accel.h"
 #include "pid/gyro.h"
+#include "pid/compass.h"
 
 static bool sensor_async_enabled = false;
 static uint8_t sensors_calibration_state = SENSORS_UNCALIBRATED;
@@ -177,6 +178,6 @@ static void sensor_mag_read_complete(uint8_t buffer[], uint8_t length)
 	async_data_cmd[9] = buffer[2];
 	async_data_cmd[10] = buffer[5];
 	async_data_cmd[11] = buffer[4];
+	record_compass_sample((buffer[0]<<8)|buffer[1], -((buffer[2]<<8)|buffer[3]), -((buffer[4]<<8)|buffer[5]) );
 	qcfp_send_data(async_data_cmd, 12);
->>>>>>> 95da12f28527d93f4706ff05ac1e19807c117ed0
 }

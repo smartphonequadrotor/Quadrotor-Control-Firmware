@@ -68,6 +68,13 @@ void evaluateMetersPerSec() {
   accelSampleCount = 0;
 }
 
+void reset_accel_samples(){
+	accelSample[XAXIS] = 0;
+	accelSample[YAXIS] = 0;
+	accelSample[ZAXIS] = 0;
+	accelSampleCount = 0;
+}
+
 void computeAccelBias() {
 
   //TODO: We need to get exactly SAMPLECOUNT_A (400) accel samples to compute bias.

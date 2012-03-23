@@ -51,6 +51,7 @@ SOFTWARE.
 
 void record_gyro_sample(int16_t x, int16_t y, int16_t z );
 void evaluateGyroRate(void);
+void reset_gyro_samples(void);
 void computeGyroBias(void);
 
 #endif /* GYRO_H_ */
