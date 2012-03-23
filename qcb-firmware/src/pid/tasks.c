@@ -19,10 +19,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
+#include "qcb.h"
 #include "pid/tasks.h"
 #include "system.h"
 #include "pid/accel.h"
 #include "pid/gyro.h"
+#include "pid/globalDefined.h"
 
 
 float G_Dt = .02;
@@ -40,6 +42,15 @@ void pid_100Hz_task(){
 	evaluateMetersPerSec();
 	evaluateGyroRate();
 
+	//fourth order filter...
+	float filteredAccel[3] = {0.0,0.0,0.0};
+	for (uint8_t axis = XAXIS; axis <= ZAXIS; axis++) {
+		filteredAccel[axis] = computeFourthOrder(get_axis_mps(axis), axis);
+	}
+
+	//kinematics calculation to determine orientation
+
+	//update flight parameters using kinematics.
 
 }
 

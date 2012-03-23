@@ -92,3 +92,7 @@ void computeAccelBias() {
 
   accelOneG = abs(meterPerSecSec[ZAXIS] + runTimeAccelBias[ZAXIS]);
 }
+
+float get_axis_mps(uint8_t axis){
+	return meterPerSecSec[axis];
+}

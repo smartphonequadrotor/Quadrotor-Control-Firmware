@@ -395,8 +395,10 @@ int32_t isq(int32_t  x) {
 
 fourthOrderData fourthOrder[4];
 
-float computeFourthOrder(float currentInput, fourthOrderData *filterParameters)
+float computeFourthOrder(float currentInput, uint8_t index)
 {
+	fourthOrderData *filterParameters = &(fourthOrder[index]);
+
   float output;
 
   output = _b0 * currentInput                +

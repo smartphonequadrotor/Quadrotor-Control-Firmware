@@ -218,7 +218,7 @@ bool isSwitched(float previousError, float currentError);
 float invSqrt(float x);
 int32_t  isq(int32_t  x);
 
-float computeFourthOrder(float currentInput, struct fourthOrderData *filterParameters);
+float computeFourthOrder(float currentInput, uint8_t index);
 
 void setupFourthOrder(void);
 
