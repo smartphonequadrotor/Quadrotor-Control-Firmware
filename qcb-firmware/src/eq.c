@@ -104,31 +104,35 @@ void eq_post(eq_handler callback, void* buffer, uint8_t buffer_size)
  * Timer events can be posted from any run level and will always execute
  * at the main loop level.
  */
-void eq_post_timer(eq_timer_handler callback, uint32_t period, timer_type_t type)
+eq_timer_error eq_post_timer(eq_timer_handler callback, uint32_t period, timer_type_t type)
 {
 	int i;
-	uint8_t timer_index;
+	uint8_t timer_index = EQ_MAX_TIMER_EVENTS;
 
 	interrupts_disable();
 	if(timer_event_buffer.num_events >= EQ_MAX_TIMER_EVENTS)
 	{
 		interrupts_enable();
-		return;
+		return eq_timer_full;
 	}
 
 	for(i = 0; i < EQ_MAX_TIMER_EVENTS; i++)
 	{
+		if(timer_event_buffer.events[i].callback == callback)
+		{
+			interrupts_enable();
+			return eq_timer_exists;
+		}
 		if(timer_event_buffer.event_used[i] == false)
 		{
 			timer_index = i;
-			break;
 		}
 	}
 
-	if(i == EQ_MAX_TIMER_EVENTS)
+	if(timer_index == EQ_MAX_TIMER_EVENTS)
 	{
 		interrupts_enable();
-		return;
+		return eq_timer_full;
 	}
 
 	timer_event_buffer.events[timer_index].callback = callback;
@@ -137,7 +141,9 @@ void eq_post_timer(eq_timer_handler callback, uint32_t period, timer_type_t type
 	timer_event_buffer.events[timer_index].type = type;
 	timer_event_buffer.event_used[timer_index] = true;
 	timer_event_buffer.num_events++;
+
 	interrupts_enable();
+	return eq_timer_success;
 }
 
 void eq_dispatch(void)
