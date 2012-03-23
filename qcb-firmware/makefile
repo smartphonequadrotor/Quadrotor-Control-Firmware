@@ -23,7 +23,7 @@ USE_THUMB_MODE = YES
 
 # MCU name, submodel and board
 MCU      = arm7tdmi
-SUBMDL   = at91sam7s161
+SUBMDL   = at91sam7s128
 
 # Target file name (without extension).
 TARGET = qcb-firmware
@@ -50,6 +50,14 @@ SRC += src/circular_buffer.c
 SRC += at91lib/async.c
 SRC += at91lib/twi.c
 SRC += at91lib/twid.c
+# PID fun!
+SRC += src/pid/kinematics_ARG.c
+SRC += src/pid/pid_init.c
+SRC += src/pid/math.c
+SRC += src/pid/pid.c
+SRC += src/pid/tasks.c
+SRC += src/pid/accel.c
+SRC += src/pid/gyro.c
 
 # List C source files here which must be compiled in ARM-Mode.
 # use file-extension c for "c-only"-files
@@ -173,6 +181,7 @@ CPLUSPLUS_LIB =
 #    --cref:    add cross reference to  map file
 LDFLAGS = -nostartfiles -Wl,-Map=$(TARGET).map,--cref,--gc-sections
 #LDFLAGS += $(NEWLIBLPC) $(MATH_LIB)
+LDFLAGS += $(MATH_LIB)
 #LDFLAGS += -lc -lgcc 
 #LDFLAGS += $(CPLUSPLUS_LIB)
 LDFLAGS += $(patsubst %,-L%,$(EXTRA_LIBDIRS))
@@ -233,6 +242,12 @@ ALL_ASFLAGS = -mcpu=$(MCU) $(THUMB_IW) -I. -x assembler-with-cpp $(ASFLAGS)
 # Default target.
 all: build
 
+# Default target with gdb download
+all-download: build  sizebefore sizeafter download
+
+download:
+	gdb -x $(SUBMDL)_rom_jlink.gdb -ex quit
+
 build: elf hex bin lss sym
 
 hex: $(TARGET).hex
@@ -247,7 +262,7 @@ sym: $(TARGET).sym
 
 # Display size of file.
 HEXSIZE = $(SIZE) --target=$(FORMAT) $(TARGET).hex
-ELFSIZE = $(SIZE) -A $(TARGET).elf
+ELFSIZE = $(SIZE) $(TARGET).elf
 
 sizebefore:
 	@if [ -f $(TARGET).elf ]; then echo; echo $(MSG_SIZE_BEFORE); $(ELFSIZE); echo; fi

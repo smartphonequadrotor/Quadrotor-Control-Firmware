@@ -30,6 +30,9 @@ SOFTWARE.
 #include "interrupts.h"
 #include "gpio.h"
 
+//PID init
+#include "pid/pid_init.h"
+
 int main(void)
 {
 	// Enable peripherals
@@ -50,8 +53,37 @@ int main(void)
 	AT91C_BASE_PIOA->PIO_CODR = AT91C_PIO_PA23;
 
 	sensors_init();
+	pid_init();
 
 	eq_post_timer(gpio_led_dance, 250, eq_timer_periodic);
+
+	//******************INIT**********************
+
+	//_X_ we want to init our sensors...
+	//we want to calibrate sensors and put system in "good" state.
+	//we want to init motors to default (0) values.
+	//_X_ we need to init kinematics to 0 values.
+	//_X_ we need to init windup guard values for PID extreme conditions.
+	//we MAY need to init rangefinder for height sensing.
+	//we need to set up the fourth order filter for accelerometers.
+
+	//******************TASKS**********************
+	//4kHz:
+	//		measure Accelerometer, Gyroscope.
+	//100Hz:
+	//		update GD_t (SECONDS as a float between 100Hz updates )
+	//		evaluate m/s
+	//		evaluate gyro rate
+	//		apply 4th order filter on accel values
+	//		calculate kinematics using gyro and accel
+	//		*****PID ONLY*****
+	//			__?Adjust throttle using height
+	//			process flight control
+	//50Hz:
+	//		read pilot commands
+	//		get height from rangefinder
+	//10Hz:
+	//		magnetometer read to kinematics data for kinematics calculation
 
 	while(1)
 	{

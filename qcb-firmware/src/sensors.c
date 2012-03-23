@@ -22,6 +22,8 @@ SOFTWARE.
 #include "sensors.h"
 #include "twi.h"
 #include "qcfp.h"
+#include "pid/accel.h"
+#include "pid/gyro.h"
 
 static bool sensor_reads_enabled = false;
 
@@ -70,12 +72,16 @@ static void sensor_accel_read_complete(uint8_t buffer[], uint8_t length)
 	uint8_t async_data_cmd[8];
 	async_data_cmd[0] = QCFP_ASYNC_DATA;
 	async_data_cmd[1] = QCFP_ASYNC_DATA_ACCEL;
-	async_data_cmd[2] = buffer[0];
-	async_data_cmd[3] = buffer[1];
-	async_data_cmd[4] = buffer[2];
-	async_data_cmd[5] = buffer[3];
-	async_data_cmd[6] = buffer[4];
-	async_data_cmd[7] = buffer[5];
+	async_data_cmd[2] = buffer[0];//X LSB
+	async_data_cmd[3] = buffer[1];//X MSB
+	async_data_cmd[4] = buffer[2];//Y LSB
+	async_data_cmd[5] = buffer[3];//Y MSB
+	async_data_cmd[6] = buffer[4];//Z LSB
+	async_data_cmd[7] = buffer[5];//Z MSB
+
+	//record accelerometer sample to sample buffer.
+	record_accel_sample((buffer[1]<<8)|buffer[0], (buffer[3]<<8)|buffer[2], (buffer[5]<<8)|buffer[4] );
+
 	qcfp_send_data(async_data_cmd, 8);
 }
 
@@ -98,11 +104,16 @@ static void sensor_gyro_read_complete(uint8_t buffer[], uint8_t length)
 	uint8_t async_data_cmd[8];
 	async_data_cmd[0] = QCFP_ASYNC_DATA;
 	async_data_cmd[1] = QCFP_ASYNC_DATA_GYRO;
-	async_data_cmd[2] = buffer[1];
-	async_data_cmd[3] = buffer[0];
-	async_data_cmd[4] = buffer[3];
-	async_data_cmd[5] = buffer[2];
-	async_data_cmd[6] = buffer[5];
-	async_data_cmd[7] = buffer[4];
+	async_data_cmd[2] = buffer[1];//X LSB
+	async_data_cmd[3] = buffer[0];//X MSB
+	async_data_cmd[4] = buffer[3];//Y LSB
+	async_data_cmd[5] = buffer[2];//Y MSB
+	async_data_cmd[6] = buffer[5];//Z LSB
+	async_data_cmd[7] = buffer[4];//Z MSB
+
+	//Aeroquad swaps the X and Y axis in their code for some reason with the 9doF board
+	//we will too.
+	record_gyro_sample((buffer[2]<<8)|buffer[3], (buffer[0]<<8)|buffer[1], (buffer[4]<<8)|buffer[5] );
+
 	qcfp_send_data(async_data_cmd, 8);
 }
