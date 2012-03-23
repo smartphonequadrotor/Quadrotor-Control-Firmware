@@ -36,7 +36,7 @@ SOFTWARE.
 
 #define ESC_STARTUP_TIME         5*SYSTEM_1_S
 
-static bool flight_ready = false;
+static bool flight_mode = false;
 
 // All handlers execute at the main loop level. Instead of using the
 // stack, they can all share this buffer for assembling their responses.
@@ -237,57 +237,104 @@ static void qcfp_handle_packet(uint8_t packet[], uint8_t length)
 // ===========================================================================
 // 0x40
 // ===========================================================================
+#define CMD_40_CALIBRATE_START_STOP_INDEX 0
+#define     CMD_40_STOP_CALIBRATION       0
+#define     CMD_40_START_CALIBRATION      1
+#define     CMD_40_UNABLE_TO_CALIBRATE    3
 
 static bool qcfp_calibrate_quadrotor_handler(uint8_t payload[], uint8_t length)
 {
-	return false;
+	bool nack = false;
+	response_length = 2;
+
+	// 0 length = state query
+	if(length == 0)
+	{
+		response_buffer[1] = sensors_get_calibration_state();
+	}
+	else if(length == 1)
+	{
+		if(payload[0] == CMD_40_START_CALIBRATION)
+		{
+			if(flight_mode == false)
+			{
+				sensors_set_calibration(true);
+				response_buffer[1] = sensors_get_calibration_state();
+			}
+			else
+			{
+				// Can't calibrate while flight mode is active
+				response_buffer[1] = CMD_40_UNABLE_TO_CALIBRATE;
+			}
+		}
+		else if(payload[0] == CMD_40_STOP_CALIBRATION)
+		{
+			sensors_set_calibration(false);
+			response_buffer[1] = sensors_get_calibration_state();
+		}
+		else
+		{
+			nack = true;
+		}
+	}
+	else
+	{
+		nack = true;
+	}
+	return nack;
 }
 
 // ===========================================================================
 // 0x41
 // ===========================================================================
 #define CMD_41_ENABLE_INDEX 0
-#define     CMD_41_ENABLED  1
 #define     CMD_41_DISABLED 0
+#define     CMD_41_ENABLED  1
 #define     CMD_41_PENDING  2
+
+static void qcfp_flight_mode_handler_esc_enable_timeout(void)
+{
+	uint8_t buffer[2];
+	buffer[0] = QCFP_FLIGHT_MODE;
+	buffer[1] = CMD_41_ENABLED;
+	flight_mode = true;
+	gpio_set_leds(gpio_led_4);
+	sensors_set_async(true);
+	qcfp_send_data(buffer, sizeof(buffer));
+}
 
 static bool qcfp_flight_mode_handler(uint8_t payload[], uint8_t length)
 {
-	static uint32_t esc_enable_time = 0;
 	bool nack = false;
 
-	if(length >= 1)
+	response_length = 2;
+
+	if(length == 0)
+	{
+		response_buffer[1] = flight_mode;
+	}
+	else if(length == 1)
 	{
 		switch(payload[CMD_41_ENABLE_INDEX])
 		{
 		case CMD_41_ENABLED:
-			if(esc_enable_time == 0)
+			if((sensors_get_calibration_state() == SENSORS_CALIBRATED) && (flight_mode == false))
 			{
-				esc_enable_time = system_uptime();
-			}
-			gpio_set_escs(true);
-			if((esc_enable_time + ESC_STARTUP_TIME) < system_uptime())
-			{
-				// ESCs have been on long enough to be initialized
-				response_buffer[1] = CMD_41_ENABLED;
-				flight_ready = true;
-				gpio_set_leds(gpio_led_4);
-				sensors_set_async(true);
-			}
-			else
-			{
+				gpio_set_escs(true);
+				// Because of the design of the timer module, this post will fail if the callback
+				// has already been posted. Because of this, we are guaranteed that the callback
+				// is only called once (per enable) since flight mode won't be false after it executes.
+				eq_post_timer(qcfp_flight_mode_handler_esc_enable_timeout, ESC_STARTUP_TIME, eq_timer_one_shot);
 				// ESCs need more time to initialize
 				response_buffer[1] = CMD_41_PENDING;
-				flight_ready = false;
 				gpio_clear_leds(gpio_led_4);
 			}
 			break;
 		case CMD_41_DISABLED:
 			gpio_set_escs(false);
 			pwm_set_all(0);
-			esc_enable_time = 0;
 			response_buffer[1] = CMD_41_DISABLED;
-			flight_ready = false;
+			flight_mode = false;
 			gpio_clear_leds(gpio_led_4);
 			sensors_set_async(false);
 			break;
@@ -295,12 +342,12 @@ static bool qcfp_flight_mode_handler(uint8_t payload[], uint8_t length)
 			nack = true;
 			break;
 		}
-		response_length = 2;
 	}
 	else
 	{
 		nack = true;
 	}
+
 	return nack;
 }
 
@@ -317,7 +364,7 @@ static bool qcfp_raw_motor_control_handler(uint8_t payload[], uint8_t length)
 		return true;
 	}
 
-	if(flight_ready)
+	if(flight_mode)
 	{
 		pwm_set(pwm_motor0, payload[0]);
 		pwm_set(pwm_motor1, payload[1]);

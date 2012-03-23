@@ -23,7 +23,8 @@ SOFTWARE.
 #include "twi.h"
 #include "qcfp.h"
 
-static bool sensor_reads_enabled = false;
+static bool sensor_async_enabled = false;
+static uint8_t sensors_calibration_state = SENSORS_UNCALIBRATED;
 
 static void sensor_accel_init_complete(uint8_t buffer[], uint8_t length);
 static void sensor_accel_sample(void);
@@ -47,7 +48,24 @@ void sensors_init(void)
 
 void sensors_set_async(bool on)
 {
-	sensor_reads_enabled = on;
+	sensor_async_enabled = on;
+}
+
+void sensors_set_calibration(bool on)
+{
+	if(on)
+	{
+		sensors_calibration_state = SENSORS_CALIBRATED;
+	}
+	else
+	{
+		// Cancel calibration
+	}
+}
+
+uint8_t sensors_get_calibration_state(void)
+{
+	return sensors_calibration_state;
 }
 
 static void sensor_accel_init_complete(uint8_t buffer[], uint8_t length)
@@ -63,7 +81,7 @@ static void sensor_accel_init_complete(uint8_t buffer[], uint8_t length)
 
 static void sensor_accel_sample(void)
 {
-	if(sensor_reads_enabled)
+	if(sensor_async_enabled || (sensors_calibration_state == SENSORS_CALIBRATING))
 	{
 		twi_read_register(SENSOR_ACCEL_ADDR, ADXL345_DATA_START, SENSOR_NUM_ACCEL_BYTES, sensor_accel_read_complete);
 	}
@@ -96,7 +114,7 @@ static void sensor_gyro_init_complete(uint8_t buffer[], uint8_t length)
 
 static void sensor_gyro_sample(void)
 {
-	if(sensor_reads_enabled)
+	if(sensor_async_enabled || (sensors_calibration_state == SENSORS_CALIBRATING))
 	{
 		twi_read_register(SENSOR_GYRO_ADDR, ITG3200_DATA_START, SENSOR_NUM_GYRO_BYTES, sensor_gyro_read_complete);
 	}
@@ -125,7 +143,7 @@ static void sensor_mag_init_complete(uint8_t buffer[], uint8_t length)
 
 static void sensor_mag_sample(void)
 {
-	if(sensor_reads_enabled)
+	if(sensor_async_enabled || (sensors_calibration_state == SENSORS_CALIBRATING))
 	{
 		// Get the data from the last single conversion
 		twi_read_register(SENSOR_MAG_ADDR, HMC5843_DATA_START, SENSOR_NUM_MAG_BYTES, sensor_mag_read_complete);

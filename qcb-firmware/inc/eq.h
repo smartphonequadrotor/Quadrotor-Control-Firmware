@@ -33,11 +33,18 @@ typedef enum
 	eq_timer_one_shot
 } timer_type_t;
 
+typedef enum
+{
+	eq_timer_full,
+	eq_timer_exists,
+	eq_timer_success,
+} eq_timer_error;
+
 typedef uint32_t period_t;
 
 void eq_init(void);
 void eq_post(eq_handler callback, void* buffer, uint8_t buffer_size);
-void eq_post_timer(eq_timer_handler callback, period_t period, timer_type_t type);
+eq_timer_error eq_post_timer(eq_timer_handler callback, period_t period, timer_type_t type);
 void eq_dispatch(void);
 void eq_dispatch_timers(void);
 
