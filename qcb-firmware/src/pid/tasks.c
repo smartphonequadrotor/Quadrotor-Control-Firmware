@@ -20,6 +20,7 @@ SOFTWARE.
 *****************************************************************************/
 
 #include "qcb.h"
+#include "qcfp.h"
 #include "pid/tasks.h"
 #include "system.h"
 #include "pid/accel.h"
@@ -109,10 +110,12 @@ void pid_100Hz_task(){
 						G_Dt);
 	#endif
 
+	if(qcfp_pid_enabled()){
 	#ifdef COMPILE_WITH_PID
 	//update flight parameters using kinematics.
 	process_flight_control();
 	#endif
+	}
 }
 
 void pid_10Hz_task(){
