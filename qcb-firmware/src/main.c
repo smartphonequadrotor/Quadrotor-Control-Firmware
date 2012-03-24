@@ -65,7 +65,7 @@ int main(void)
 	//_X_ we need to init kinematics to 0 values.
 	//_X_ we need to init windup guard values for PID extreme conditions.
 	//we MAY need to init rangefinder for height sensing.
-	//we need to set up the fourth order filter for accelerometers.
+	//_X_we need to set up the fourth order filter for accelerometers.
 
 	//******************TASKS**********************
 	//4kHz:
@@ -80,7 +80,7 @@ int main(void)
 	//			__?Adjust throttle using height
 	//			process flight control
 	//50Hz:
-	//		read pilot commands
+	//		--read pilot commands
 	//		get height from rangefinder
 	//10Hz:
 	//		magnetometer heading update using kinematics data

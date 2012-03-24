@@ -38,6 +38,8 @@ TARGET = qcb-firmware
 
 KINEMATICS = DCM_KIN
 
+
+
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
 # System and initialization
@@ -71,6 +73,7 @@ SRC += src/pid/tasks.c
 SRC += src/pid/accel.c
 SRC += src/pid/gyro.c
 SRC += src/pid/compass.c
+SRC += src/pid/flight_controller.c
 
 # List C source files here which must be compiled in ARM-Mode.
 # use file-extension c for "c-only"-files
@@ -157,6 +160,7 @@ CFLAGS += -Wa,-adhlns=$(subst $(suffix $<),.lst,$<)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += -Wcast-qual
 CFLAGS += -D$(KINEMATICS)
+CFLAGS += -DCOMPILE_WITH_PID
 
 # flags only for C
 CONLYFLAGS += -Wnested-externs 

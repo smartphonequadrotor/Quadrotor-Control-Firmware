@@ -42,6 +42,7 @@ SOFTWARE.
 #include "pid/pid.h"
 #include "pid/math.h"
 #include "system.h"
+#include "qcb.h"
 
 
 // PID Variables
@@ -59,8 +60,9 @@ float windupGuard;
 
 
 // Modified from http://www.arduino.cc/playground/Main/BarebonesPIDForEspresso
-float updatePID(float targetPosition, float currentPosition, PIDdata *PIDparameters) {
+float updatePID(float targetPosition, float currentPosition, uint8_t index) {
 
+	PIDdata *PIDparameters = &PID[index];
   // AKA PID experiments
 	uint32_t currentTime = system_uptime();
   const float deltaPIDTime = (currentTime - PIDparameters->previousPIDTime) / 1000.0;
@@ -86,4 +88,8 @@ void zeroIntegralError() {
 void windupGuard_init(){
 	PID[ATTITUDE_XAXIS_PID_IDX].windupGuard = WINDUP_DEFAULT;
 	PID[ATTITUDE_YAXIS_PID_IDX].windupGuard = WINDUP_DEFAULT;
+}
+
+void reset_heading_error(){
+	PID[HEADING_HOLD_PID_IDX].integratedError = 0;
 }

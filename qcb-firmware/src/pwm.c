@@ -76,8 +76,8 @@ void pwm_set(pwm_motor m, uint8_t value)
 
 void pwm_set_all(uint8_t value)
 {
-		pwm_set(pwm_motor0, value);
 		pwm_set(pwm_motor1, value);
 		pwm_set(pwm_motor2, value);
 		pwm_set(pwm_motor3, value);
+		pwm_set(pwm_motor4, value);
 }

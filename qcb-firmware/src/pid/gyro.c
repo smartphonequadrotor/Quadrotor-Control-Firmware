@@ -25,14 +25,14 @@ SOFTWARE.
 #include "pid/globalDefined.h"
 #include "pid/math.h"
 
-float gyroRate[3] = {0.0,0.0,0.0};
-int   gyroZero[3] = {0,0,0};
-long  gyroSample[3] = {0,0,0};
-float gyroSmoothFactor = 1.0;
-float gyroScaleFactor = radians(1.0 / 14.375);  //  ITG3200 14.375 LSBs per °/sec
-float gyroHeading = 0.0;
-unsigned long gyroLastMesuredTime = 0;
-uint8_t gyroSampleCount = 0;
+static float gyroRate[3] = {0.0,0.0,0.0};
+static int   gyroZero[3] = {0,0,0};
+static long  gyroSample[3] = {0,0,0};
+static float gyroSmoothFactor = 1.0;
+static float gyroScaleFactor = radians(1.0 / 14.375);  //  ITG3200 14.375 LSBs per °/sec
+static float gyroHeading = 0.0;
+static unsigned long gyroLastMesuredTime = 0;
+static uint8_t gyroSampleCount = 0;
 
 void record_gyro_sample(int16_t x, int16_t y, int16_t z ){
 	gyroSample[XAXIS] += x;
@@ -77,7 +77,7 @@ void computeGyroBias() {
   //TODO: We need to get exactly SAMPLECOUNT_G (400) gyro samples to compute bias.
   int gyroADC[3];
   for (uint8_t axis = 0; axis < 3; axis++) {
-	  gyroADC[axis] = ((float)(gyroSample[axis])/SAMPLECOUNT_G);
+	  gyroADC[axis] = ((float)(gyroSample[axis])/((float)SAMPLECOUNT_G));
     gyroSample[axis] = 0;
   }
   gyroSampleCount = 0;
@@ -86,3 +86,12 @@ void computeGyroBias() {
   gyroZero[YAXIS] = gyroADC[YAXIS];
   gyroZero[ZAXIS] = gyroADC[ZAXIS];
 }
+
+float get_axis_gr(uint8_t axis){
+	return gyroRate[axis];
+}
+
+float get_gyro_heading(void){
+	return gyroHeading;
+}
+

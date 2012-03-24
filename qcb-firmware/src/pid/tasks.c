@@ -19,13 +19,39 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
+/*
+  AeroQuad v3.0.1 - February 2012
+  www.AeroQuad.com
+  Copyright (c) 2012 Ted Carancho.  All rights reserved.
+  An Open Source Arduino based multicopter.
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "qcb.h"
 #include "pid/tasks.h"
 #include "system.h"
 #include "pid/accel.h"
 #include "pid/gyro.h"
+#include "pid/compass.h"
+#include "pid/math.h"
+#include "pid/kinematics_ARG.h"
+#include "pid/kinematics_MARG.h"
+#include "pid/kinematics_DCM.h"
 #include "pid/globalDefined.h"
 #include "pid/math.h"
+#include "pid/flight_controller.h"
 
 float G_Dt = .02;
 uint32_t pid_100HZ_previousTime = 0;
@@ -43,14 +69,56 @@ void pid_100Hz_task(){
 	evaluateGyroRate();
 
 	//fourth order filter...
-	float filteredAccel[3] = {0.0,0.0,0.0};
+	float filtered_accel[3] = {0.0,0.0,0.0};
 	for (uint8_t axis = XAXIS; axis <= ZAXIS; axis++) {
-		filteredAccel[axis] = computeFourthOrder(get_axis_mps(axis), axis);
+		filtered_accel[axis] = computeFourthOrder(get_axis_mps(axis), axis);
 	}
 
 	//kinematics calculation to determine orientation
+	#if defined MARG_KIN
+	calculateKinematics(get_axis_gr(XAXIS),
+						get_axis_gr(YAXIS),
+						get_axis_gr(ZAXIS),
+						filtered_accel[XAXIS],
+						filtered_accel[YAXIS],
+						filtered_accel[ZAXIS],
+						read_compass_raw(XAXIS),
+						read_compass_raw(YAXIS),
+						read_compass_raw(ZAXIS),
+						G_Dt);
+	#elif defined ARG_KIN
+	calculateKinematics(get_axis_gr(XAXIS),
+						get_axis_gr(YAXIS),
+						get_axis_gr(ZAXIS),
+						filtered_accel[XAXIS],
+						filtered_accel[YAXIS],
+						filtered_accel[ZAXIS],
+						0.0,
+						0.0,
+						0.0,
+						G_Dt);
+	#elif defined DCM_KIN
+	calculateKinematics(get_axis_gr(XAXIS),
+						get_axis_gr(YAXIS),
+						get_axis_gr(ZAXIS),
+						filtered_accel[XAXIS],
+						filtered_accel[YAXIS],
+						filtered_accel[ZAXIS],
+						get_accel_one_G(),
+						getHdgXY(XAXIS),
+						getHdgXY(YAXIS),
+						G_Dt);
+	#endif
 
+	#ifdef COMPILE_WITH_PID
 	//update flight parameters using kinematics.
+	process_flight_control();
+	#endif
+}
 
+void pid_10Hz_task(){
+	#if defined MARG_KIN || defined DCM_KIN
+	read_compass(get_kinematics_angle(XAXIS),get_kinematics_angle(YAXIS));
+	#endif
 }
 

@@ -65,6 +65,10 @@ float previousEx = 0.0;
 float previousEy = 0.0;
 float previousEz = 0.0;
 
+float get_kinematics_angle(uint8_t axis){
+	return kinematicsAngle[axis];
+}
+
 void initializeBaseKinematicsParam(float hdgX, float hdgY) {
   for (uint8_t axis = XAXIS; axis <= ZAXIS; axis++)
     kinematicsAngle[axis] = 0.0;

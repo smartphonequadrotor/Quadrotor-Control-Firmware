@@ -23,7 +23,9 @@ SOFTWARE.
 #define TASKS_H_
 
 #define PID_100Hz 10
+#define PID_10Hz  100
 
 void pid_100Hz_task(void);
+void pid_10Hz_task(void);
 
 #endif /* TASKS_H_ */
