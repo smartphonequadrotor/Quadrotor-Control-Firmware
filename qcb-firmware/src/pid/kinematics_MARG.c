@@ -70,6 +70,10 @@ float previousEx = 0.0;
 float previousEy = 0.0;
 float previousEz = 0.0;
 
+float get_kinematics_angle(uint8_t axis){
+	return kinematicsAngle[axis];
+}
+
 //=====================================================================================================
 // AHRS.c
 // S.O.H. Madgwick

@@ -26,10 +26,10 @@ SOFTWARE.
 
 typedef enum pwm_motor
 {
-	pwm_motor0 = 0,
-	pwm_motor1 = 1,
-	pwm_motor2 = 2,
-	pwm_motor3 = 3,
+	pwm_motor1 = 0,
+	pwm_motor2 = 1,
+	pwm_motor3 = 2,
+	pwm_motor4 = 3,
 } pwm_motor;
 
 void pwm_init(void);

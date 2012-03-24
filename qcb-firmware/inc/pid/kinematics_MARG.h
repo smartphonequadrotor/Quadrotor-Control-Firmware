@@ -30,6 +30,7 @@ SOFTWARE.
 #define ARG 3
 #define MARG 4
 
+float get_kinematics_angle(uint8_t axis);
 void initializeBaseKinematicsParam(float hdgX, float hdgY);
 void initializeKinematics(float hdgX, float hdgY);
 void calculateKinematics(float rollRate,           float pitchRate,     float yawRate,

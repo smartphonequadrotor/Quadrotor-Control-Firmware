@@ -22,6 +22,8 @@ SOFTWARE.
 #ifndef PID_H_
 #define PID_H_
 
+#include "qcb.h"
+
 #define WINDUP_DEFAULT .375
 
 /*
@@ -70,11 +72,12 @@ typedef struct PIDdata {
 
 
 // Modified from http://www.arduino.cc/playground/Main/BarebonesPIDForEspresso
-float updatePID(float targetPosition, float currentPosition, PIDdata *PIDparameters);
+float updatePID(float targetPosition, float currentPosition, uint8_t index);
 
 void zeroIntegralError(void) __attribute__ ((noinline));
 
 void windupGuard_init(void);
 
+void reset_heading_error(void);
 
 #endif /* PID_H_ */

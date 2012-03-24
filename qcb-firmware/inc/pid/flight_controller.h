@@ -19,13 +19,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#ifndef GYRO_H_
-#define GYRO_H_
-
-#include "qcb.h"
-
-#define SAMPLECOUNT_G 400
-
+#ifndef FLIGHT_CONTROLLER_H_
+#define FLIGHT_CONTROLLER_H_
 
 /*
   AeroQuad v3.0.1 - February 2012
@@ -46,14 +41,52 @@ SOFTWARE.
   You should have received a copy of the GNU General Public License
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+#include "pid/math.h"
 
-#define FINDZERO 49
+#define ON 1
+#define OFF 0
 
-void record_gyro_sample(int16_t x, int16_t y, int16_t z );
-void evaluateGyroRate(void);
-void reset_gyro_samples(void);
-void computeGyroBias(void);
-float get_axis_gr(uint8_t axis);
-float get_gyro_heading(void);
+#define ATTITUDE_SCALING (0.75 * .002)
+#define SI_SCALING 		(2.5 * .002)
 
-#endif /* GYRO_H_ */
+#define MINCOMMAND 1000
+#define MIDCOMMAND 1500
+#define MAXCOMMAND 2000
+#define MINDELTA 200
+#define MINCHECK MINCOMMAND + 100
+#define MAXCHECK MAXCOMMAND - 100
+#define MINTHROTTLE MINCOMMAND + 100
+#define COMMAND_PWM_RATIO 13
+#define MIN_PWM_COMMAND 1025
+#define minArmedThrottle 1150
+
+/*
+       CW  0....Front....0 CCW
+           ......***......
+           ......***......
+           ......***......
+      CCW  0....Back.....0  CW
+*/
+
+#define MOTOR1 0
+#define MOTOR2 1
+#define MOTOR3 2
+#define MOTOR4 3
+#define FRONT_LEFT  MOTOR1
+#define FRONT_RIGHT MOTOR2
+#define REAR_RIGHT  MOTOR3
+#define REAR_LEFT   MOTOR4
+#define LASTMOTOR   MOTOR4+1
+
+void reset_heading_values(void);
+void calculateFlightError(void);
+void processHeading(void);
+void processMinMaxCommand(void);
+void process_flight_control(void);
+const float getReceiverSIData(uint8_t channel);
+const float getReceiverAData(uint8_t channel);
+void applyMotorCommand(void);
+void writeMotors(void);
+void write_raw_pid_command(uint8_t axis, int value);
+
+#endif /* FLIGHT_CONTROLLER_H_ */

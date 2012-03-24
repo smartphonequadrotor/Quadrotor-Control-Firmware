@@ -81,7 +81,7 @@ void computeAccelBias() {
 
 
   for (uint8_t axis = 0; axis < 3; axis++) {
-    meterPerSecSec[axis] = ((float)(accelSample[axis])/SAMPLECOUNT_A) * accelScaleFactor[axis];
+    meterPerSecSec[axis] = ((float)(accelSample[axis])/((float)SAMPLECOUNT_A)) * accelScaleFactor[axis];
     accelSample[axis] = 0;
   }
   accelSampleCount = 0;
@@ -95,4 +95,8 @@ void computeAccelBias() {
 
 float get_axis_mps(uint8_t axis){
 	return meterPerSecSec[axis];
+}
+
+float get_accel_one_G(){
+	return accelOneG;
 }

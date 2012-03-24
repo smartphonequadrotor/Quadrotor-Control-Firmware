@@ -54,6 +54,7 @@ SOFTWARE.
 // Optimizations done by Jihlein
 // http://aeroquad.com/showthread.php?991-AeroQuad-Flight-Software-v2.0&p=12286&viewfull=1#post12286
 // This class is responsible for calculating vehicle attitude
+
 uint8_t kinematicsType = 0;
 float kinematicsAngle[3] = {0.0,0.0,0.0};
 float gyroAngle[2] = {0.0,0.0};
@@ -82,6 +83,9 @@ float kiRollPitch = 0.0;
 float kpYaw = 0.0;
 float kiYaw = 0.0;
 
+float get_kinematics_angle(uint8_t axis){
+	return kinematicsAngle[axis];
+}
 
 void initializeBaseKinematicsParam(float hdgX, float hdgY) {
   for (uint8_t axis = XAXIS; axis <= ZAXIS; axis++)

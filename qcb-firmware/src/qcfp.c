@@ -366,10 +366,10 @@ static bool qcfp_raw_motor_control_handler(uint8_t payload[], uint8_t length)
 
 	if(flight_mode)
 	{
-		pwm_set(pwm_motor0, payload[0]);
-		pwm_set(pwm_motor1, payload[1]);
-		pwm_set(pwm_motor2, payload[2]);
-		pwm_set(pwm_motor3, payload[3]);
+		pwm_set(pwm_motor1, payload[0]);
+		pwm_set(pwm_motor2, payload[1]);
+		pwm_set(pwm_motor3, payload[2]);
+		pwm_set(pwm_motor4, payload[3]);
 		response_buffer[1] = CMD_F0_PWM_SET;
 	}
 	else
