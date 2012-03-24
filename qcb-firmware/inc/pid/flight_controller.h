@@ -19,9 +19,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#ifndef FLIGHT_CONTROLLER_H_
-#define FLIGHT_CONTROLLER_H_
-
 /*
   AeroQuad v3.0.1 - February 2012
   www.AeroQuad.com
@@ -41,6 +38,10 @@ SOFTWARE.
   You should have received a copy of the GNU General Public License
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+
+#ifndef FLIGHT_CONTROLLER_H_
+#define FLIGHT_CONTROLLER_H_
+
 #include "pid/math.h"
 
 #define ON 1

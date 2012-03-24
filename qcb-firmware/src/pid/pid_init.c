@@ -19,16 +19,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#include "pid/pid_init.h"
-#include "pid/kinematics_ARG.h"
-#include "pid/kinematics_MARG.h"
-#include "pid/kinematics_DCM.h"
-#include "pid/pid.h"
-#include "pid/math.h"
-#include "pid/tasks.h"
-#include "pid/compass.h"
-#include "eq.h"
-
 /*
   AeroQuad v3.0.1 - February 2012
   www.AeroQuad.com
@@ -48,6 +38,17 @@ SOFTWARE.
   You should have received a copy of the GNU General Public License
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+
+#include "pid/pid_init.h"
+#include "pid/kinematics_ARG.h"
+#include "pid/kinematics_MARG.h"
+#include "pid/kinematics_DCM.h"
+#include "pid/pid.h"
+#include "pid/math.h"
+#include "pid/tasks.h"
+#include "pid/compass.h"
+#include "pid/flight_controller.h"
+#include "eq.h"
 
 void pid_init(){
 
