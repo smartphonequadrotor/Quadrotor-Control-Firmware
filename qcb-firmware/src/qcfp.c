@@ -197,6 +197,11 @@ bool qcfp_flight_enabled(void)
 	return flight_mode;
 }
 
+bool qcfp_pid_enabled(void)
+{
+	return false;
+}
+
 void qcfp_send_calibration_state(void)
 {
 	uint8_t buffer[2];

@@ -40,6 +40,7 @@ SOFTWARE.
 */
 
 #include "qcb.h"
+#include "qcfp.h"
 #include "pid/tasks.h"
 #include "system.h"
 #include "pid/accel.h"
@@ -50,7 +51,6 @@ SOFTWARE.
 #include "pid/kinematics_MARG.h"
 #include "pid/kinematics_DCM.h"
 #include "pid/globalDefined.h"
-#include "pid/math.h"
 #include "pid/flight_controller.h"
 
 float G_Dt = .02;
@@ -110,10 +110,13 @@ void pid_100Hz_task(){
 						G_Dt);
 	#endif
 
-	#ifdef COMPILE_WITH_PID
-	//update flight parameters using kinematics.
-	process_flight_control();
-	#endif
+	if(qcfp_pid_enabled())
+	{
+#ifdef COMPILE_WITH_PID
+		//update flight parameters using kinematics.
+		process_flight_control();
+#endif
+	}
 }
 
 void pid_10Hz_task(){
