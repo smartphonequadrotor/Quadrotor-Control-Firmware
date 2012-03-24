@@ -60,11 +60,10 @@ SOFTWARE.
 #define SENSOR_NUM_MAG_BYTES             6
 
 #define SENSORS_UNCALIBRATED 0x00
-#define SENSORS_CALIBRATING  0x01
-#define SENSORS_CALIBRATED   0x02
+#define SENSORS_CALIBRATED   0x01
+#define SENSORS_CALIBRATING  0x02
 
 void sensors_init(void);
-void sensors_set_async(bool on);
 void sensors_set_calibration(bool on);
 uint8_t sensors_get_calibration_state(void);
 

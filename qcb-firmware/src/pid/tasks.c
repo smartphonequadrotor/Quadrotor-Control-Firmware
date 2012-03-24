@@ -25,7 +25,7 @@ SOFTWARE.
 #include "pid/accel.h"
 #include "pid/gyro.h"
 #include "pid/globalDefined.h"
-
+#include "pid/math.h"
 
 float G_Dt = .02;
 uint32_t pid_100HZ_previousTime = 0;

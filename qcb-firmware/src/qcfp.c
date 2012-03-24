@@ -152,7 +152,7 @@ void qcfp_send_data(uint8_t buffer[], uint8_t buffer_size)
 	}
 
 	// First byte is always 0
-	encoded_data[0] = 0;
+	encoded_data[0] = COBS_TERM_BYTE;
 
 	for(i = 0; i < buffer_size; i++, byte_count++)
 	{
@@ -179,7 +179,7 @@ void qcfp_send_data(uint8_t buffer[], uint8_t buffer_size)
 		encoded_data[encoded_data_index++] = 1;
 	}
 
-	encoded_data[++encoded_data_index] = 0;
+	encoded_data[encoded_data_index++] = COBS_TERM_BYTE;
 	us1_send_buffer(encoded_data, encoded_data_index);
 }
 
@@ -190,6 +190,19 @@ void qcfp_format_timestamp(uint8_t buffer[])
 	{
 		buffer[i] = (now >> i*8) & 0x000000FF;
 	}
+}
+
+bool qcfp_flight_enabled(void)
+{
+	return flight_mode;
+}
+
+void qcfp_send_calibration_state(void)
+{
+	uint8_t buffer[2];
+	buffer[0] = QCFP_CALIBRATE_QUADROTOR;
+	buffer[1] = sensors_get_calibration_state();
+	qcfp_send_data(buffer, sizeof(buffer));
 }
 
 static void qcfp_handle_packet(uint8_t packet[], uint8_t length)
@@ -298,8 +311,7 @@ static void qcfp_flight_mode_handler_esc_enable_timeout(void)
 	buffer[0] = QCFP_FLIGHT_MODE;
 	buffer[1] = CMD_41_ENABLED;
 	flight_mode = true;
-	gpio_set_leds(gpio_led_4);
-	sensors_set_async(true);
+	gpio_set_leds(gpio_led_3);
 	qcfp_send_data(buffer, sizeof(buffer));
 }
 
@@ -318,16 +330,27 @@ static bool qcfp_flight_mode_handler(uint8_t payload[], uint8_t length)
 		switch(payload[CMD_41_ENABLE_INDEX])
 		{
 		case CMD_41_ENABLED:
-			if((sensors_get_calibration_state() == SENSORS_CALIBRATED) && (flight_mode == false))
+			if(sensors_get_calibration_state() == SENSORS_CALIBRATED)
 			{
-				gpio_set_escs(true);
-				// Because of the design of the timer module, this post will fail if the callback
-				// has already been posted. Because of this, we are guaranteed that the callback
-				// is only called once (per enable) since flight mode won't be false after it executes.
-				eq_post_timer(qcfp_flight_mode_handler_esc_enable_timeout, ESC_STARTUP_TIME, eq_timer_one_shot);
-				// ESCs need more time to initialize
-				response_buffer[1] = CMD_41_PENDING;
-				gpio_clear_leds(gpio_led_4);
+				if(flight_mode == false)
+				{
+					gpio_set_escs(true);
+					// Because of the design of the timer module, this post will fail if the callback
+					// has already been posted. Because of this, we are guaranteed that the callback
+					// is only called once (per enable) since flight mode won't be false after it executes.
+					eq_post_timer(qcfp_flight_mode_handler_esc_enable_timeout, ESC_STARTUP_TIME, eq_timer_one_shot);
+					// ESCs need more time to initialize
+					response_buffer[1] = CMD_41_PENDING;
+					gpio_clear_leds(gpio_led_3);
+				}
+				else
+				{
+					response_buffer[1] = CMD_41_ENABLED;
+				}
+			}
+			else
+			{
+				response_buffer[1] = CMD_41_DISABLED;
 			}
 			break;
 		case CMD_41_DISABLED:
@@ -335,8 +358,7 @@ static bool qcfp_flight_mode_handler(uint8_t payload[], uint8_t length)
 			pwm_set_all(0);
 			response_buffer[1] = CMD_41_DISABLED;
 			flight_mode = false;
-			gpio_clear_leds(gpio_led_4);
-			sensors_set_async(false);
+			gpio_clear_leds(gpio_led_3);
 			break;
 		default:
 			nack = true;

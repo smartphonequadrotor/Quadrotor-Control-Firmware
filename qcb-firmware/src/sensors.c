@@ -22,12 +22,18 @@ SOFTWARE.
 #include "sensors.h"
 #include "twi.h"
 #include "qcfp.h"
+#include "gpio.h"
 #include "pid/accel.h"
 #include "pid/gyro.h"
 #include "pid/compass.h"
 
-static bool sensor_async_enabled = false;
 static uint8_t sensors_calibration_state = SENSORS_UNCALIBRATED;
+static uint16_t number_of_accel_calibration_samples = 0;
+static uint16_t number_of_gyro_calibration_samples = 0;
+static bool accel_calibrated = false;
+static bool gyro_calibrated = false;
+
+void sensors_check_calibration_complete(void);
 
 static void sensor_accel_init_complete(uint8_t buffer[], uint8_t length);
 static void sensor_accel_sample(void);
@@ -49,26 +55,41 @@ void sensors_init(void)
 	twi_write_register(SENSOR_ACCEL_ADDR, ADXL345_BW_RATE_ADDR, ADXL345_RATE_200, sensor_accel_init_complete);
 }
 
-void sensors_set_async(bool on)
-{
-	sensor_async_enabled = on;
-}
-
 void sensors_set_calibration(bool on)
 {
 	if(on)
 	{
-		sensors_calibration_state = SENSORS_CALIBRATED;
+		reset_accel_samples();
+		reset_gyro_samples();
+		gyro_calibrated = false;
+		accel_calibrated = false;
+		number_of_accel_calibration_samples = 0;
+		number_of_gyro_calibration_samples = 0;
+		sensors_calibration_state = SENSORS_CALIBRATING;
+		gpio_clear_leds(gpio_led_2);
 	}
 	else
 	{
 		// Cancel calibration
+		sensors_calibration_state = SENSORS_UNCALIBRATED;
+		number_of_accel_calibration_samples = 0;
+		number_of_gyro_calibration_samples = 0;
 	}
 }
 
 uint8_t sensors_get_calibration_state(void)
 {
 	return sensors_calibration_state;
+}
+
+void sensors_check_calibration_complete(void)
+{
+	if(accel_calibrated && gyro_calibrated)
+	{
+		sensors_calibration_state = SENSORS_CALIBRATED;
+		gpio_set_leds(gpio_led_2);
+		qcfp_send_calibration_state();
+	}
 }
 
 static void sensor_accel_init_complete(uint8_t buffer[], uint8_t length)
@@ -84,7 +105,7 @@ static void sensor_accel_init_complete(uint8_t buffer[], uint8_t length)
 
 static void sensor_accel_sample(void)
 {
-	if(sensor_async_enabled || (sensors_calibration_state == SENSORS_CALIBRATING))
+	if(qcfp_flight_enabled() || (sensors_calibration_state == SENSORS_CALIBRATING))
 	{
 		twi_read_register(SENSOR_ACCEL_ADDR, ADXL345_DATA_START, SENSOR_NUM_ACCEL_BYTES, sensor_accel_read_complete);
 	}
@@ -92,22 +113,22 @@ static void sensor_accel_sample(void)
 
 static void sensor_accel_read_complete(uint8_t buffer[], uint8_t length)
 {
-	uint8_t async_data_cmd[12];
-	async_data_cmd[0] = QCFP_ASYNC_DATA;
-	async_data_cmd[1] = QCFP_ASYNC_DATA_ACCEL;
-	qcfp_format_timestamp(&async_data_cmd[2]);
-	async_data_cmd[6] = buffer[0];//X LSB
-	async_data_cmd[7] = buffer[1];//X MSB
-	async_data_cmd[8] = buffer[2];//Y LSB
-	async_data_cmd[9] = buffer[3];//Y MSB
-	async_data_cmd[10] = buffer[4];//Z LSB
-	async_data_cmd[11] = buffer[5];//Z MSB
-
 	//record accelerometer sample to sample buffer.
-	record_accel_sample((buffer[1]<<8)|buffer[0], (buffer[3]<<8)|buffer[2], (buffer[5]<<8)|buffer[4] );
+	record_accel_sample((buffer[1] << 8) | buffer[0], (buffer[3] << 8) | buffer[2], (buffer[5] << 8) | buffer[4]);
 
-	qcfp_send_data(async_data_cmd, 12);
-
+	if((sensors_calibration_state == SENSORS_CALIBRATING) && (!accel_calibrated))
+	{
+		if(number_of_accel_calibration_samples == SAMPLECOUNT_A)
+		{
+			computeAccelBias();
+			accel_calibrated = true;
+			sensors_check_calibration_complete();
+		}
+		else
+		{
+			number_of_accel_calibration_samples++;
+		}
+	}
 }
 
 static void sensor_gyro_init_complete(uint8_t buffer[], uint8_t length)
@@ -122,7 +143,7 @@ static void sensor_gyro_init_complete(uint8_t buffer[], uint8_t length)
 
 static void sensor_gyro_sample(void)
 {
-	if(sensor_async_enabled || (sensors_calibration_state == SENSORS_CALIBRATING))
+	if(qcfp_flight_enabled() || (sensors_calibration_state == SENSORS_CALIBRATING))
 	{
 		twi_read_register(SENSOR_GYRO_ADDR, ITG3200_DATA_START, SENSOR_NUM_GYRO_BYTES, sensor_gyro_read_complete);
 	}
@@ -130,23 +151,22 @@ static void sensor_gyro_sample(void)
 
 static void sensor_gyro_read_complete(uint8_t buffer[], uint8_t length)
 {
-	uint8_t async_data_cmd[12];
-	async_data_cmd[0] = QCFP_ASYNC_DATA;
-	async_data_cmd[1] = QCFP_ASYNC_DATA_GYRO;
-	qcfp_format_timestamp(&async_data_cmd[2]);
-	async_data_cmd[6] = buffer[1];//X LSB
-	async_data_cmd[7] = buffer[0];//X MSB
-	async_data_cmd[8] = buffer[3];//Y LSB
-	async_data_cmd[9] = buffer[2];//Y MSB
-	async_data_cmd[10] = buffer[5];//Z LSB
-	async_data_cmd[11] = buffer[4];//Z MSB
+	// 9 degree of freedom board has the sensors mounted such that the x and y of the gyro are swapped
+	record_gyro_sample((buffer[2] << 8) | buffer[3], (buffer[0] << 8) | buffer[1], (buffer[4] << 8) | buffer[5]);
 
-	//Aeroquad swaps the X and Y axis in their code for some reason with the 9doF board
-	//we will too.
-	record_gyro_sample((buffer[2]<<8)|buffer[3], (buffer[0]<<8)|buffer[1], (buffer[4]<<8)|buffer[5] );
-
-	qcfp_send_data(async_data_cmd, 12);
-
+	if((sensors_calibration_state == SENSORS_CALIBRATING) && (!gyro_calibrated))
+	{
+		if(number_of_gyro_calibration_samples == SAMPLECOUNT_A)
+		{
+			computeGyroBias();
+			gyro_calibrated = true;
+			sensors_check_calibration_complete();
+		}
+		else
+		{
+			number_of_gyro_calibration_samples++;
+		}
+	}
 }
 
 static void sensor_mag_init_complete(uint8_t buffer[], uint8_t length)
@@ -157,7 +177,7 @@ static void sensor_mag_init_complete(uint8_t buffer[], uint8_t length)
 
 static void sensor_mag_sample(void)
 {
-	if(sensor_async_enabled || (sensors_calibration_state == SENSORS_CALIBRATING))
+	if(qcfp_flight_enabled() || (sensors_calibration_state == SENSORS_CALIBRATING))
 	{
 		// Get the data from the last single conversion
 		twi_read_register(SENSOR_MAG_ADDR, HMC5843_DATA_START, SENSOR_NUM_MAG_BYTES, sensor_mag_read_complete);
@@ -168,16 +188,8 @@ static void sensor_mag_sample(void)
 
 static void sensor_mag_read_complete(uint8_t buffer[], uint8_t length)
 {
-	uint8_t async_data_cmd[12];
-	async_data_cmd[0] = QCFP_ASYNC_DATA;
-	async_data_cmd[1] = QCFP_ASYNC_DATA_MAG;
-	qcfp_format_timestamp(&async_data_cmd[2]);
-	async_data_cmd[6] = buffer[1];
-	async_data_cmd[7] = buffer[0];
-	async_data_cmd[8] = buffer[3];
-	async_data_cmd[9] = buffer[2];
-	async_data_cmd[10] = buffer[5];
-	async_data_cmd[11] = buffer[4];
-	record_compass_sample((buffer[0]<<8)|buffer[1], -((buffer[2]<<8)|buffer[3]), -((buffer[4]<<8)|buffer[5]) );
-	qcfp_send_data(async_data_cmd, 12);
+	if(qcfp_flight_enabled())
+	{
+		record_compass_sample((buffer[0] << 8) | buffer[1], -((buffer[2] << 8) | buffer[3]), -((buffer[4] << 8) | buffer[5]));
+	}
 }
