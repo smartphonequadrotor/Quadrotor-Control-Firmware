@@ -26,6 +26,8 @@ SOFTWARE.
 #include "us1.h"
 #include "gpio.h"
 #include "sensors.h"
+#include "pid/kinematics.h"
+#include "pid/pid.h"
 
 // Max encoded packet size includes an extra byte at the start and end and
 // up to 1 additional byte of overhead
@@ -38,6 +40,12 @@ SOFTWARE.
 
 static bool flight_mode = false;
 
+#define QCFP_CONTROL_MODE_NORMAL 0
+#define QCFP_CONTROL_MODE_MANUAL 1
+#define QCFP_CONTROL_MODE_PID    2
+
+static uint8_t control_mode = QCFP_CONTROL_MODE_NORMAL;
+
 // All handlers execute at the main loop level. Instead of using the
 // stack, they can all share this buffer for assembling their responses.
 static uint8_t response_buffer[QCFP_MAX_PACKET_SIZE];
@@ -48,7 +56,7 @@ static void qcfp_handle_packet(uint8_t packet[], uint8_t length);
 static bool qcfp_calibrate_quadrotor_handler(uint8_t payload[], uint8_t length);
 static bool qcfp_flight_mode_handler(uint8_t payload[], uint8_t length);
 static bool qcfp_raw_motor_control_handler(uint8_t payload[], uint8_t length);
-
+static bool qcfp_control_method_override_handler(uint8_t payload[], uint8_t length);
 void qcfp_init(void)
 {
 
@@ -192,6 +200,22 @@ void qcfp_format_timestamp(uint8_t buffer[])
 	}
 }
 
+void qcfp_format_float_as_bytes(uint8_t buffer[], float f)
+{
+	typedef union f_b
+	{
+		float f;
+		uint8_t b[0];
+	} f_b;
+
+	f_b float_to_bytes;
+	float_to_bytes.f = f;
+	for(int i = 0; i < sizeof(f_b); i++)
+	{
+		buffer[i] = float_to_bytes.b[i];
+	}
+}
+
 bool qcfp_flight_enabled(void)
 {
 	return flight_mode;
@@ -199,7 +223,7 @@ bool qcfp_flight_enabled(void)
 
 bool qcfp_pid_enabled(void)
 {
-	return false;
+	return (control_mode == QCFP_CONTROL_MODE_PID);
 }
 
 void qcfp_send_calibration_state(void)
@@ -208,6 +232,18 @@ void qcfp_send_calibration_state(void)
 	buffer[0] = QCFP_CALIBRATE_QUADROTOR;
 	buffer[1] = sensors_get_calibration_state();
 	qcfp_send_data(buffer, sizeof(buffer));
+}
+
+void qcfp_send_kinematics_angles(void)
+{
+	uint8_t buffer[18];
+	buffer[0] = QCFP_ASYNC_DATA;
+	buffer[1] = QCFP_ASYNC_DATA_KIN;
+	qcfp_format_timestamp(&buffer[2]);
+	qcfp_format_float_as_bytes(&buffer[6], get_kinematics_angle(XAXIS));
+	qcfp_format_float_as_bytes(&buffer[10], get_kinematics_angle(YAXIS));
+	qcfp_format_float_as_bytes(&buffer[14], get_kinematics_angle(ZAXIS));
+	us1_send_buffer(buffer, sizeof(buffer));
 }
 
 static void qcfp_handle_packet(uint8_t packet[], uint8_t length)
@@ -231,6 +267,9 @@ static void qcfp_handle_packet(uint8_t packet[], uint8_t length)
 			break;
 		case QCFP_FLIGHT_MODE:
 			nack = qcfp_flight_mode_handler(payload, payload_length);
+			break;
+		case QCFP_CONTROL_METHOD_OVERRIDE:
+			nack = qcfp_control_method_override_handler(payload, payload_length);
 			break;
 		default:
 			nack = true;
@@ -391,7 +430,7 @@ static bool qcfp_raw_motor_control_handler(uint8_t payload[], uint8_t length)
 		return true;
 	}
 
-	if(flight_mode)
+	if(flight_mode && (control_mode != QCFP_CONTROL_MODE_PID))
 	{
 		pwm_set(pwm_motor1, payload[0]);
 		pwm_set(pwm_motor2, payload[1]);
@@ -405,6 +444,39 @@ static bool qcfp_raw_motor_control_handler(uint8_t payload[], uint8_t length)
 	}
 
 	response_length = 2;
+	return false;
+}
 
+static bool qcfp_control_method_override_handler(uint8_t payload[], uint8_t length)
+{
+	if(length == 0)
+	{
+		response_buffer[1] = control_mode;
+	}
+	else
+	{
+		if((payload[1] >= QCFP_CONTROL_MODE_NORMAL) && (payload[1] <= QCFP_CONTROL_MODE_PID))
+		{
+			control_mode = response_buffer[1] = payload[0];
+			response_buffer[1] = payload[0];
+
+			switch(control_mode)
+			{
+			case QCFP_CONTROL_MODE_NORMAL:
+				// Not yet implemented
+				break;
+			case QCFP_CONTROL_MODE_MANUAL:
+				// PID is disabled by the fact that control_mode is not QCFP_CONTROL_MODE_PID
+				break;
+			case QCFP_CONTROL_MODE_PID:
+				pid_init();
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
+	response_length = 2;
 	return false;
 }

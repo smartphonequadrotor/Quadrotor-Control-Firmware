@@ -70,6 +70,7 @@ typedef struct PIDdata {
 } PIDdata;
 // This struct above declares the variable PID[] to hold each of the PID values for various functions
 
+void pid_init(void);
 
 // Modified from http://www.arduino.cc/playground/Main/BarebonesPIDForEspresso
 float updatePID(float targetPosition, float currentPosition, uint8_t index);

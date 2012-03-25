@@ -19,10 +19,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#ifndef PID_INIT_H_
-#define PID_INIT_H_
+#ifndef _PID_KINEMATICS_H_
+#define _PID_KINEMATICS_H_
 
-void pid_init(void);
+#include "qcb.h"
+#include "pid/globalDefined.h"
 
+void kinematics_init(void);
+void kinematics_stop(void);
 
-#endif /* PID_INIT_H_ */
+#if defined ARG_KIN
+#include "pid/kinematics_ARG.h"
+#elif defined MARG_KIN
+#include "pid/kinematics_MARG.h"
+#elif defined DCM_KIN
+#include "pid/kinematics_DCM.h"
+#endif
+
+#endif // _PID_KINEMATICS_H_

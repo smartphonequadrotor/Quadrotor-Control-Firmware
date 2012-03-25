@@ -53,8 +53,8 @@ SOFTWARE.
 #include "pid/globalDefined.h"
 #include "pid/flight_controller.h"
 
-float G_Dt = .02;
-uint32_t pid_100HZ_previousTime = 0;
+static float G_Dt = .02;
+static uint32_t pid_100HZ_previousTime = 0;
 
 
 void pid_100Hz_task(){
@@ -108,20 +108,15 @@ void pid_100Hz_task(){
 						getHdgXY(XAXIS),
 						getHdgXY(YAXIS),
 						G_Dt);
+	#else
+		#error "Must define at least one of ARG_KIN, MARG_KIN, or DCM_KIN"
 	#endif
+
+	qcfp_send_kinematics_angles();
 
 	if(qcfp_pid_enabled())
 	{
-#ifdef COMPILE_WITH_PID
 		//update flight parameters using kinematics.
 		process_flight_control();
-#endif
 	}
 }
-
-void pid_10Hz_task(){
-	#if defined MARG_KIN || defined DCM_KIN
-	read_compass(get_kinematics_angle(XAXIS),get_kinematics_angle(YAXIS));
-	#endif
-}
-

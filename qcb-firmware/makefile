@@ -36,7 +36,7 @@ TARGET = qcb-firmware
 #			 than integrating  raw values into
 #			 kinematics.
 
-KINEMATICS = DCM_KIN
+#KINEMATICS = DCM_KIN
 
 
 
@@ -63,10 +63,7 @@ SRC += at91lib/async.c
 SRC += at91lib/twi.c
 SRC += at91lib/twid.c
 # PID fun!
-SRC += src/pid/kinematics_ARG.c
-SRC += src/pid/kinematics_MARG.c
-SRC += src/pid/kinematics_DCM.c
-SRC += src/pid/pid_init.c
+SRC += src/pid/kinematics.c
 SRC += src/pid/math.c
 SRC += src/pid/pid.c
 SRC += src/pid/tasks.c
@@ -159,8 +156,8 @@ CFLAGS += -Wredundant-decls -Wreturn-type -Wshadow -Wunused
 CFLAGS += -Wa,-adhlns=$(subst $(suffix $<),.lst,$<) 
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += -Wcast-qual
-CFLAGS += -D$(KINEMATICS)
-CFLAGS += -DCOMPILE_WITH_PID
+#CFLAGS += -D$(KINEMATICS)
+#CFLAGS += -DCOMPILE_WITH_PID
 
 # flags only for C
 CONLYFLAGS += -Wnested-externs 

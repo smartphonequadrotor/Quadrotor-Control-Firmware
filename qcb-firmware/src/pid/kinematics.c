@@ -39,30 +39,16 @@ SOFTWARE.
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "pid/pid_init.h"
-#include "pid/kinematics_ARG.h"
-#include "pid/kinematics_MARG.h"
-#include "pid/kinematics_DCM.h"
-#include "pid/pid.h"
+#include "pid/kinematics.h"
 #include "pid/math.h"
-#include "pid/tasks.h"
 #include "pid/compass.h"
-#include "pid/flight_controller.h"
+#include "pid/tasks.h"
+#include "system.h"
 #include "eq.h"
 
-void pid_init(){
-
-	zeroIntegralError(); //zero the integral error to init
-	//TODO this needs to be called whenever pid takes over.
-	reset_heading_values();//reset all heading info
-	windupGuard_init(); //init x&y windupGuards.
-
-	//TODO
-	//We should consider adding the "computeAccelBias" function after calibration.
-	//TODO: We need to get exactly SAMPLECOUNT (400) accel samples to compute bias.
-
-	//(Should) also run zeroIntegralError after all calibrations as well.
-
+// Must not be called until after a calibration has been performed
+void kinematics_init(void)
+{
 	#if defined ARG_KIN || defined DCM_KIN
 	initializeKinematics(1.0, 0.0);  // with no compass (magnetometer), DCM matrix initalizes to a heading of 0 degrees
 	#elif defined MARG_KIN
@@ -71,7 +57,18 @@ void pid_init(){
 
 	setupFourthOrder(); //initializes the fourth order filter stuff...
 
-	eq_post_timer(pid_100Hz_task, PID_100Hz, eq_timer_periodic);
-
-
+	eq_post_timer(pid_100Hz_task, 10*SYSTEM_1_MS, eq_timer_periodic);
 }
+
+void kinematics_stop(void)
+{
+	eq_remove_timer(pid_100Hz_task);
+}
+
+#if defined ARG_KIN
+#include "kinematics_ARG.c"
+#elif defined MARG_KIN
+#include "kinematics_MARG.c"
+#elif defined DCM_KIN
+#include "kinematics_DCM.c"
+#endif

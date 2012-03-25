@@ -178,17 +178,19 @@ void eq_dispatch(void)
 void eq_dispatch_timers(void)
 {
 	int i;
+	eq_timer_handler execute_me = NULL;
 	uint32_t now = system_uptime();
 
 	if(eq_timer_last_time < now)
 	{
 		for(i = 0; i < EQ_MAX_TIMER_EVENTS; i++)
 		{
+			interrupts_disable();
 			if(timer_event_buffer.event_used[i])
 			{
 				if((timer_event_buffer.events[i].last_execution + timer_event_buffer.events[i].period) <= now)
 				{
-					timer_event_buffer.events[i].callback();
+					execute_me = timer_event_buffer.events[i].callback;
 					if(timer_event_buffer.events[i].type == eq_timer_one_shot)
 					{
 						timer_event_buffer.event_used[i] = false;
@@ -199,6 +201,31 @@ void eq_dispatch_timers(void)
 					}
 				}
 			}
+			interrupts_enable();
+			if(execute_me)
+			{
+				execute_me();
+			}
+			execute_me = NULL;
 		}
 	}
+}
+
+void eq_remove_timer(eq_timer_handler event)
+{
+	int i;
+
+	interrupts_disable();
+	for(i = 0; i < EQ_MAX_TIMER_EVENTS; i++)
+	{
+		if(timer_event_buffer.event_used[i])
+		{
+			if(timer_event_buffer.events[i].callback == event)
+			{
+				timer_event_buffer.event_used[i] = false;
+				timer_event_buffer.num_events--;
+			}
+		}
+	}
+	interrupts_enable();
 }

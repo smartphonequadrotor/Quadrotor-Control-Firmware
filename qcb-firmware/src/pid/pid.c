@@ -39,16 +39,16 @@ SOFTWARE.
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "qcb.h"
 #include "pid/pid.h"
 #include "pid/math.h"
+#include "pid/flight_controller.h"
 #include "system.h"
-#include "qcb.h"
-
 
 // PID Variables
-PIDdata PID[10];
+static PIDdata PID[10];
 
-float windupGuard;
+//static float windupGuard;
 
 // This struct above declares the variable PID[] to hold each of the PID values for various functions
 // The following constants are declared in AeroQuad.h
@@ -58,6 +58,12 @@ float windupGuard;
 // ALTITUDE = 8 (used for altitude hold)
 // ZDAMPENING = 9 (used in altitude hold to dampen vertical accelerations)
 
+void pid_init(void)
+{
+	zeroIntegralError(); // zero the integral error to init
+	reset_heading_values();// reset all heading info
+	windupGuard_init(); // init x and y windupGuards.
+}
 
 // Modified from http://www.arduino.cc/playground/Main/BarebonesPIDForEspresso
 float updatePID(float targetPosition, float currentPosition, uint8_t index) {

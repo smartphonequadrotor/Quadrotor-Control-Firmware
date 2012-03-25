@@ -30,9 +30,6 @@ SOFTWARE.
 #include "interrupts.h"
 #include "gpio.h"
 
-//PID init
-#include "pid/pid_init.h"
-
 int main(void)
 {
 	// Enable peripherals
@@ -53,7 +50,6 @@ int main(void)
 	AT91C_BASE_PIOA->PIO_CODR = AT91C_PIO_PA23;
 
 	sensors_init();
-	pid_init();
 
 	eq_post_timer(gpio_led_dance, 250, eq_timer_periodic);
 

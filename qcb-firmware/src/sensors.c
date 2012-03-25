@@ -26,12 +26,14 @@ SOFTWARE.
 #include "pid/accel.h"
 #include "pid/gyro.h"
 #include "pid/compass.h"
+#include "pid/kinematics.h"
 
 static uint8_t sensors_calibration_state = SENSORS_UNCALIBRATED;
 static uint16_t number_of_accel_calibration_samples = 0;
 static uint16_t number_of_gyro_calibration_samples = 0;
 static bool accel_calibrated = false;
 static bool gyro_calibrated = false;
+static bool mag_sample_collected = false;
 
 void sensors_check_calibration_complete(void);
 
@@ -57,23 +59,26 @@ void sensors_init(void)
 
 void sensors_set_calibration(bool on)
 {
+	gpio_clear_leds(gpio_led_2);
+	gyro_calibrated = false;
+	accel_calibrated = false;
+	mag_sample_collected = false;
+	number_of_accel_calibration_samples = 0;
+	number_of_gyro_calibration_samples = 0;
+
 	if(on)
 	{
 		reset_accel_samples();
 		reset_gyro_samples();
-		gyro_calibrated = false;
-		accel_calibrated = false;
-		number_of_accel_calibration_samples = 0;
-		number_of_gyro_calibration_samples = 0;
 		sensors_calibration_state = SENSORS_CALIBRATING;
-		gpio_clear_leds(gpio_led_2);
 	}
 	else
 	{
 		// Cancel calibration
+		// Places system into an uncalibrated state. If this happens, another
+		// calibration MUST be performed.
 		sensors_calibration_state = SENSORS_UNCALIBRATED;
-		number_of_accel_calibration_samples = 0;
-		number_of_gyro_calibration_samples = 0;
+		kinematics_stop();
 	}
 }
 
@@ -84,8 +89,13 @@ uint8_t sensors_get_calibration_state(void)
 
 void sensors_check_calibration_complete(void)
 {
-	if(accel_calibrated && gyro_calibrated)
+	if(accel_calibrated && gyro_calibrated && mag_sample_collected)
 	{
+		// We have a magnetometer sample, initial roll/pitch should be 0 since
+		// the quadrotor is calibrating
+		// Read compass uses the sample and calculates a heading
+		read_compass(0.0, 0.0);
+		kinematics_init();
 		sensors_calibration_state = SENSORS_CALIBRATED;
 		gpio_set_leds(gpio_led_2);
 		qcfp_send_calibration_state();
@@ -105,7 +115,7 @@ static void sensor_accel_init_complete(uint8_t buffer[], uint8_t length)
 
 static void sensor_accel_sample(void)
 {
-	if(qcfp_flight_enabled() || (sensors_calibration_state == SENSORS_CALIBRATING))
+	if((sensors_calibration_state == SENSORS_CALIBRATED) || (sensors_calibration_state == SENSORS_CALIBRATING))
 	{
 		twi_read_register(SENSOR_ACCEL_ADDR, ADXL345_DATA_START, SENSOR_NUM_ACCEL_BYTES, sensor_accel_read_complete);
 	}
@@ -143,7 +153,7 @@ static void sensor_gyro_init_complete(uint8_t buffer[], uint8_t length)
 
 static void sensor_gyro_sample(void)
 {
-	if(qcfp_flight_enabled() || (sensors_calibration_state == SENSORS_CALIBRATING))
+	if((sensors_calibration_state == SENSORS_CALIBRATED) || (sensors_calibration_state == SENSORS_CALIBRATING))
 	{
 		twi_read_register(SENSOR_GYRO_ADDR, ITG3200_DATA_START, SENSOR_NUM_GYRO_BYTES, sensor_gyro_read_complete);
 	}
@@ -177,7 +187,7 @@ static void sensor_mag_init_complete(uint8_t buffer[], uint8_t length)
 
 static void sensor_mag_sample(void)
 {
-	if(qcfp_flight_enabled() || (sensors_calibration_state == SENSORS_CALIBRATING))
+	if((sensors_calibration_state == SENSORS_CALIBRATED) || (sensors_calibration_state == SENSORS_CALIBRATING))
 	{
 		// Get the data from the last single conversion
 		twi_read_register(SENSOR_MAG_ADDR, HMC5843_DATA_START, SENSOR_NUM_MAG_BYTES, sensor_mag_read_complete);
@@ -188,8 +198,18 @@ static void sensor_mag_sample(void)
 
 static void sensor_mag_read_complete(uint8_t buffer[], uint8_t length)
 {
-	if(qcfp_flight_enabled())
+	mag_sample_collected = true;
+
+	record_compass_sample((buffer[0] << 8) | buffer[1], -((buffer[2] << 8) | buffer[3]), -((buffer[4] << 8) | buffer[5]));
+
+	if(sensors_calibration_state == SENSORS_CALIBRATING)
 	{
-		record_compass_sample((buffer[0] << 8) | buffer[1], -((buffer[2] << 8) | buffer[3]), -((buffer[4] << 8) | buffer[5]));
+		sensors_check_calibration_complete();
+	}
+	else if(sensors_calibration_state == SENSORS_CALIBRATED)
+	{
+#if defined MARG_KIN || defined DCM_KIN
+		read_compass(get_kinematics_angle(XAXIS),get_kinematics_angle(YAXIS));
+#endif
 	}
 }

@@ -37,6 +37,14 @@ SOFTWARE.
 
 #define QCB_MCK 48054857
 
+// One of the following should be defined:
+// 1) ARG_KIN if not using magnetometer
+// 2) MARG_KIN if using magnetometer
+// 3) DCM_KIN if using plain DCM filter using
+//		computed heading values rather than integrating
+//		raw values into kinematics.
+#define MARG_KIN
+
 /*
  * TODO:
  * Implement workaround for errata  detailed in section 40.22.2.1

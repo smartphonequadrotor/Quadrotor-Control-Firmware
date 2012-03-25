@@ -250,6 +250,4 @@ float getGyroUnbias(uint8_t axis) {
   return correctedRateVector[axis];
 }
 
-void calibrateKinematics() {}
-
 #endif
