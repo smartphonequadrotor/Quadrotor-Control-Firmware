@@ -112,8 +112,6 @@ void pid_100Hz_task(){
 		#error "Must define at least one of ARG_KIN, MARG_KIN, or DCM_KIN"
 	#endif
 
-	qcfp_send_kinematics_angles();
-
 	if(qcfp_pid_enabled())
 	{
 		//update flight parameters using kinematics.

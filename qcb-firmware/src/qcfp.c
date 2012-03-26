@@ -237,13 +237,16 @@ void qcfp_send_calibration_state(void)
 void qcfp_send_kinematics_angles(void)
 {
 	uint8_t buffer[18];
-	buffer[0] = QCFP_ASYNC_DATA;
-	buffer[1] = QCFP_ASYNC_DATA_KIN;
-	qcfp_format_timestamp(&buffer[2]);
-	qcfp_format_float_as_bytes(&buffer[6], get_kinematics_angle(XAXIS));
-	qcfp_format_float_as_bytes(&buffer[10], get_kinematics_angle(YAXIS));
-	qcfp_format_float_as_bytes(&buffer[14], get_kinematics_angle(ZAXIS));
-	us1_send_buffer(buffer, sizeof(buffer));
+	if(sensors_get_calibration_state() == SENSORS_CALIBRATED)
+	{
+		buffer[0] = QCFP_ASYNC_DATA;
+		buffer[1] = QCFP_ASYNC_DATA_KIN;
+		qcfp_format_timestamp(&buffer[2]);
+		qcfp_format_float_as_bytes(&buffer[6], get_kinematics_angle(XAXIS));
+		qcfp_format_float_as_bytes(&buffer[10], get_kinematics_angle(YAXIS));
+		qcfp_format_float_as_bytes(&buffer[14], get_kinematics_angle(ZAXIS));
+		qcfp_send_data(buffer, sizeof(buffer));
+	}
 }
 
 static void qcfp_handle_packet(uint8_t packet[], uint8_t length)
@@ -378,6 +381,7 @@ static bool qcfp_flight_mode_handler(uint8_t payload[], uint8_t length)
 			{
 				if(flight_mode == false)
 				{
+					pwm_set_all(0);
 					gpio_set_escs(true);
 					// Because of the design of the timer module, this post will fail if the callback
 					// has already been posted. Because of this, we are guaranteed that the callback
@@ -470,6 +474,7 @@ static bool qcfp_control_method_override_handler(uint8_t payload[], uint8_t leng
 				break;
 			case QCFP_CONTROL_MODE_PID:
 				pid_init();
+//				write_raw_pid_command(THROTTLE, 1500);
 				break;
 			default:
 				break;

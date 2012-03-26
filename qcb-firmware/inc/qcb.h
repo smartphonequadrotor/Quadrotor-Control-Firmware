@@ -43,7 +43,7 @@ SOFTWARE.
 // 3) DCM_KIN if using plain DCM filter using
 //		computed heading values rather than integrating
 //		raw values into kinematics.
-#define MARG_KIN
+#define DCM_KIN
 
 /*
  * TODO:

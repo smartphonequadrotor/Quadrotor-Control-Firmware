@@ -29,6 +29,7 @@ SOFTWARE.
 #include "qcfp.h"
 #include "interrupts.h"
 #include "gpio.h"
+#include "pwm.h"
 
 int main(void)
 {
@@ -37,6 +38,7 @@ int main(void)
 	pins_init();
 	us1_init();
 	twi_init();
+	pwm_init();
 
 	// Initialize state machines
 	qcfp_init();

@@ -22,7 +22,9 @@ SOFTWARE.
 #ifndef TASKS_H_
 #define TASKS_H_
 
+// Event every 10 ms = 100Hz
 #define PID_100Hz 10
+// Event every 100 ms = 10Hz
 #define PID_10Hz  100
 
 void pid_100Hz_task(void);
