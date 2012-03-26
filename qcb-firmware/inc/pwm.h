@@ -33,7 +33,9 @@ typedef enum pwm_motor
 } pwm_motor;
 
 void pwm_init(void);
-void pwm_set(pwm_motor m, uint8_t value);
+void pwm_off(pwm_motor m);
+void pwm_off_all(void);
+void pwm_set(pwm_motor m, int32_t value);
 void pwm_set_all(uint8_t value);
 
 #endif // _PWM_H_

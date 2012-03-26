@@ -62,7 +62,51 @@ void pid_init(void)
 {
 	zeroIntegralError(); // zero the integral error to init
 	reset_heading_values();// reset all heading info
-	windupGuard_init(); // init x and y windupGuards.
+
+	PID[RATE_XAXIS_PID_IDX].P = 100.0;
+	PID[RATE_XAXIS_PID_IDX].I = 0.0;
+	PID[RATE_XAXIS_PID_IDX].D = -300.0;
+	PID[RATE_YAXIS_PID_IDX].P = 100.0;
+	PID[RATE_YAXIS_PID_IDX].I = 0.0;
+	PID[RATE_YAXIS_PID_IDX].D = -300.0;
+	PID[ZAXIS_PID_IDX].P = 200.0;
+	PID[ZAXIS_PID_IDX].I = 5.0;
+	PID[ZAXIS_PID_IDX].D = 0.0;
+	PID[ATTITUDE_XAXIS_PID_IDX].P = 4.0;
+	PID[ATTITUDE_XAXIS_PID_IDX].I = 0.0;
+	PID[ATTITUDE_XAXIS_PID_IDX].D = 0.0;
+	PID[ATTITUDE_YAXIS_PID_IDX].P = 4.0;
+	PID[ATTITUDE_YAXIS_PID_IDX].I = 0.0;
+	PID[ATTITUDE_YAXIS_PID_IDX].D = 0.0;
+	PID[HEADING_HOLD_PID_IDX].P = 3.0;
+	PID[HEADING_HOLD_PID_IDX].I = 0.1;
+	PID[HEADING_HOLD_PID_IDX].D = 0.0;
+	// AKA PID experiements
+	PID[ATTITUDE_GYRO_XAXIS_PID_IDX].P = 100.0;
+	PID[ATTITUDE_GYRO_XAXIS_PID_IDX].I = 0.0;
+	PID[ATTITUDE_GYRO_XAXIS_PID_IDX].D = -300.0;
+	PID[ATTITUDE_GYRO_YAXIS_PID_IDX].P = 100.0;
+	PID[ATTITUDE_GYRO_YAXIS_PID_IDX].I = 0.0;
+	PID[ATTITUDE_GYRO_YAXIS_PID_IDX].D = -300.0;
+
+	PID[ALTITUDE_HOLD_PID_IDX].P = 25.0;
+	PID[ALTITUDE_HOLD_PID_IDX].I = 0.6;
+	PID[ALTITUDE_HOLD_PID_IDX].D = 0.0;
+	PID[ALTITUDE_HOLD_PID_IDX].windupGuard = 25.0; //this prevents the 0.1 I term to rise too far
+	PID[ZDAMPENING_PID_IDX].P = 0.0;
+	PID[ZDAMPENING_PID_IDX].I = 0.0;
+	PID[ZDAMPENING_PID_IDX].D = 0.0;
+
+	float windupGuard = 1000.0;
+
+	// AKA - added so that each PID has its own windupGuard, will need to be removed once each PID's range is established and put in the eeprom
+	for (uint8_t i = XAXIS; i <= ZDAMPENING_PID_IDX; i++ ) {
+		if (i != ALTITUDE_HOLD_PID_IDX) {
+			PID[i].windupGuard = windupGuard;
+		}
+	}
+
+	windupGuard_init();
 }
 
 // Modified from http://www.arduino.cc/playground/Main/BarebonesPIDForEspresso

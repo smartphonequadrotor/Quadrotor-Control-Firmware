@@ -74,8 +74,8 @@ float relativeHeading     = 0; // current heading the quad is set to (set point)
 float setHeading          = 0;
 uint8_t headingHoldState  = OFF;
 
-int motorMaxCommand[4] = {0,0,0,0};
-int motorMinCommand[4] = {0,0,0,0};
+int motorMaxCommand[4] = {MAXCHECK, MAXCHECK, MAXCHECK, MAXCHECK};
+int motorMinCommand[4] = {MINCHECK, MINCHECK, MINCHECK, MINCHECK};
 int motorConfiguratorCommand[4] = {0,0,0,0};
 int motorCommand[4] = {0,0,0,0};
 
@@ -91,12 +91,15 @@ void reset_heading_values(){
 void calculateFlightError()
 {
 
-    float rollAttitudeCmd  = updatePID((receiverCommand[XAXIS]*ATTITUDE_SCALING), get_kinematics_angle(XAXIS), ATTITUDE_XAXIS_PID_IDX);
-    float pitchAttitudeCmd = updatePID((receiverCommand[YAXIS]*ATTITUDE_SCALING), -get_kinematics_angle(YAXIS), ATTITUDE_YAXIS_PID_IDX);
+    float rollAttitudeCmd  = updatePID(((receiverCommand[XAXIS]-receiverZero[XAXIS])*ATTITUDE_SCALING), get_kinematics_angle(XAXIS), ATTITUDE_XAXIS_PID_IDX);
+    float pitchAttitudeCmd = updatePID(((receiverCommand[YAXIS]-receiverZero[XAXIS])*ATTITUDE_SCALING), -get_kinematics_angle(YAXIS), ATTITUDE_YAXIS_PID_IDX);
     motorAxisCommandRoll   = updatePID(rollAttitudeCmd, get_axis_gr(XAXIS)*1.2, ATTITUDE_GYRO_XAXIS_PID_IDX);
     motorAxisCommandPitch  = updatePID(pitchAttitudeCmd, -get_axis_gr(YAXIS)*1.2, ATTITUDE_GYRO_YAXIS_PID_IDX);
 
 }
+
+float x_kin_angle = 0.0;
+float y_kin_angle = 0.0;
 
 /**
  * processHeading
@@ -112,6 +115,9 @@ void processHeading()
     #else
       heading = degrees(gyroHeading);
     #endif
+
+      x_kin_angle = degrees(get_kinematics_angle(XAXIS));
+      y_kin_angle = degrees(get_kinematics_angle(YAXIS));
 
     // Always center relative heading around absolute heading chosen during yaw command
     // This assumes that an incorrect yaw can't be forced on the AeroQuad >180 or <-180 degrees
@@ -142,7 +148,7 @@ void processHeading()
           reset_heading_error();
         }
         else if (headingHoldState == OFF) { // quick fix to soften heading hold on new heading
-          if ((currentTime - headingTime) > 500000) {
+          if ((currentTime - headingTime) > 500*SYSTEM_1_MS) {
             headingHoldState = ON;
             headingTime = currentTime;
             setHeading = heading;
@@ -174,14 +180,14 @@ void processMinMaxCommand()
   // Check if everything within motor limits
   for (uint8_t motor = 0; motor < LASTMOTOR; motor++) {
     motorMaxCheck = motorMaxCheck | (motorCommand[motor] >= MAXCOMMAND);
-    motorMinCheck = motorMinCheck | (motorCommand[motor] <= minArmedThrottle);
+    motorMinCheck = motorMinCheck | (motorCommand[motor] <= MIN_ARMED_THROTTLE);
   }
 
   // If everything within limits, turn flags off and reset max/mins to default
   if (!motorMaxCheck) {
     if (maxLimit) { // only reset if flag was on
       for (uint8_t motor = 0; motor < LASTMOTOR; motor++)
-        motorMinCommand[motor] = minArmedThrottle;
+        motorMinCommand[motor] = MIN_ARMED_THROTTLE;
       maxLimit = OFF;
     }
   }
@@ -201,7 +207,7 @@ void processMinMaxCommand()
         motorMinCommand[motorLimit] = motorCommand[motorLimit];
       maxLimit = ON;
     }
-    if ((motorCommand[motor] <= minArmedThrottle) && minLimit == OFF) {
+    if ((motorCommand[motor] <= MIN_ARMED_THROTTLE) && minLimit == OFF) {
       for (uint8_t motorLimit = 0; motorLimit < LASTMOTOR; motorLimit++)
         motorMaxCommand[motorLimit] = motorCommand[motorLimit];
       minLimit = ON;
@@ -245,7 +251,7 @@ void process_flight_control() {
   // If throttle in minimum position, don't apply yaw
   if (receiverCommand[THROTTLE] < MINCHECK) {
     for (uint8_t motor = 0; motor < LASTMOTOR; motor++) {
-      motorMaxCommand[motor] = minArmedThrottle;
+      motorMaxCommand[motor] = MIN_ARMED_THROTTLE;
     }
   }
 

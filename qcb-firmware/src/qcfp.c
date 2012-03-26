@@ -381,7 +381,7 @@ static bool qcfp_flight_mode_handler(uint8_t payload[], uint8_t length)
 			{
 				if(flight_mode == false)
 				{
-					pwm_set_all(0);
+					pwm_off_all();
 					gpio_set_escs(true);
 					// Because of the design of the timer module, this post will fail if the callback
 					// has already been posted. Because of this, we are guaranteed that the callback
@@ -403,7 +403,7 @@ static bool qcfp_flight_mode_handler(uint8_t payload[], uint8_t length)
 			break;
 		case CMD_41_DISABLED:
 			gpio_set_escs(false);
-			pwm_set_all(0);
+			pwm_off_all();
 			response_buffer[1] = CMD_41_DISABLED;
 			flight_mode = false;
 			gpio_clear_leds(gpio_led_3);
@@ -474,7 +474,6 @@ static bool qcfp_control_method_override_handler(uint8_t payload[], uint8_t leng
 				break;
 			case QCFP_CONTROL_MODE_PID:
 				pid_init();
-//				write_raw_pid_command(THROTTLE, 1500);
 				break;
 			default:
 				break;

@@ -114,6 +114,7 @@ void pid_100Hz_task(){
 
 	if(qcfp_pid_enabled())
 	{
+		write_raw_pid_command(THROTTLE, 1500);
 		//update flight parameters using kinematics.
 		process_flight_control();
 	}

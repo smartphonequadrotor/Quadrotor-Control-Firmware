@@ -57,27 +57,39 @@ void pwm_init(void)
 	);
 }
 
-void pwm_set(pwm_motor m, uint8_t value)
+void pwm_off(pwm_motor m)
 {
-	if(value == 0)
+	AT91C_BASE_PWMC->PWMC_CH[m].PWMC_CUPDR = PWM_OFF_DUTY;
+}
+
+void pwm_off_all(void)
+{
+	pwm_off(pwm_motor1);
+	pwm_off(pwm_motor2);
+	pwm_off(pwm_motor3);
+	pwm_off(pwm_motor4);
+}
+
+void pwm_set(pwm_motor m, int32_t value)
+{
+	if(value > (PWM_MAX_DUTY - PWM_BASE_DUTY))
 	{
-		value = PWM_OFF_DUTY;
+		value = (PWM_MAX_DUTY - PWM_BASE_DUTY);
 	}
-	else
+
+	if(value < 0)
 	{
-		value += PWM_BASE_DUTY;
-		if(value > PWM_MAX_DUTY)
-		{
-			value = PWM_MAX_DUTY;
-		}
+		value = 0;
 	}
+
+	value += PWM_BASE_DUTY;
 	AT91C_BASE_PWMC->PWMC_CH[m].PWMC_CUPDR = value;
 }
 
 void pwm_set_all(uint8_t value)
 {
-		pwm_set(pwm_motor1, value);
-		pwm_set(pwm_motor2, value);
-		pwm_set(pwm_motor3, value);
-		pwm_set(pwm_motor4, value);
+	pwm_set(pwm_motor1, value);
+	pwm_set(pwm_motor2, value);
+	pwm_set(pwm_motor3, value);
+	pwm_set(pwm_motor4, value);
 }
