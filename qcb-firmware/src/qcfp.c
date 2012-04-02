@@ -28,6 +28,7 @@ SOFTWARE.
 #include "sensors.h"
 #include "pid/kinematics.h"
 #include "pid/pid.h"
+#include "pid/flight_controller.h"
 
 // Max encoded packet size includes an extra byte at the start and end and
 // up to 1 additional byte of overhead
@@ -53,10 +54,12 @@ static uint8_t response_length;
 
 static void qcfp_handle_packet(uint8_t packet[], uint8_t length);
 
+static bool qcfp_set_throttle(uint8_t payload[], uint8_t length);
 static bool qcfp_calibrate_quadrotor_handler(uint8_t payload[], uint8_t length);
 static bool qcfp_flight_mode_handler(uint8_t payload[], uint8_t length);
 static bool qcfp_raw_motor_control_handler(uint8_t payload[], uint8_t length);
 static bool qcfp_control_method_override_handler(uint8_t payload[], uint8_t length);
+
 void qcfp_init(void)
 {
 
@@ -262,14 +265,17 @@ static void qcfp_handle_packet(uint8_t packet[], uint8_t length)
 
 		switch(packet[0])
 		{
-		case QCFP_RAW_MOTOR_CONTROL:
-			nack = qcfp_raw_motor_control_handler(payload, payload_length);
+		case QCFP_SET_THROTTLE:
+			nack = qcfp_set_throttle(payload, payload_length);
 			break;
 		case QCFP_CALIBRATE_QUADROTOR:
 			nack = qcfp_calibrate_quadrotor_handler(payload, payload_length);
 			break;
 		case QCFP_FLIGHT_MODE:
 			nack = qcfp_flight_mode_handler(payload, payload_length);
+			break;
+		case QCFP_RAW_MOTOR_CONTROL:
+			nack = qcfp_raw_motor_control_handler(payload, payload_length);
 			break;
 		case QCFP_CONTROL_METHOD_OVERRIDE:
 			nack = qcfp_control_method_override_handler(payload, payload_length);
@@ -292,6 +298,29 @@ static void qcfp_handle_packet(uint8_t packet[], uint8_t length)
 		}
 		qcfp_send_data(response_buffer, response_length);
 	}
+}
+
+// ===========================================================================
+// 0x24
+// ===========================================================================
+static bool qcfp_set_throttle(uint8_t payload[], uint8_t length)
+{
+	bool nack = false;
+	uint16_t throttle = 0;
+	if(length < 2)
+	{
+		throttle = read_raw_pid_command(THROTTLE);
+		response_buffer[1] = (throttle & 0x000000FF) >> 0;
+		response_buffer[2] = (throttle & 0x0000FF00) >> 8;
+		response_length = 3;
+	}
+	else if(length >= 2)
+	{
+		throttle  = (payload[0] << 0) & 0x000000FF;
+		throttle |= (payload[1] << 8) & 0x0000FF00;
+		write_raw_pid_command(THROTTLE, throttle);
+	}
+	return nack;
 }
 
 // ===========================================================================
@@ -459,9 +488,9 @@ static bool qcfp_control_method_override_handler(uint8_t payload[], uint8_t leng
 	}
 	else
 	{
-		if((payload[1] >= QCFP_CONTROL_MODE_NORMAL) && (payload[1] <= QCFP_CONTROL_MODE_PID))
+		if((payload[0] >= QCFP_CONTROL_MODE_NORMAL) && (payload[0] <= QCFP_CONTROL_MODE_PID))
 		{
-			control_mode = response_buffer[1] = payload[0];
+			control_mode = payload[0];
 			response_buffer[1] = payload[0];
 
 			switch(control_mode)

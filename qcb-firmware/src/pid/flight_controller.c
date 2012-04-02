@@ -50,13 +50,10 @@ SOFTWARE.
 #include "qcfp.h"
 #include "pwm.h"
 
-
-
 //values between 1000 to 2000
 int receiverCommand[4] = {1500, 1500, 1500, 1000};
 int receiverZero[4] = {1500, 1500, 1500, 1000};
 int throttle = 1000;
-
 
 uint8_t maxLimit = OFF;
 uint8_t minLimit = OFF;
@@ -79,9 +76,9 @@ int motorMinCommand[4] = {MINCHECK, MINCHECK, MINCHECK, MINCHECK};
 int motorConfiguratorCommand[4] = {0,0,0,0};
 int motorCommand[4] = {0,0,0,0};
 
-
 //heading reset...
-void reset_heading_values(){
+void reset_heading_values()
+{
 	headingHold         = 0;
 	heading             = 0;
 	relativeHeading     = 0;
@@ -90,16 +87,11 @@ void reset_heading_values(){
 
 void calculateFlightError()
 {
-
     float rollAttitudeCmd  = updatePID(((receiverCommand[XAXIS]-receiverZero[XAXIS])*ATTITUDE_SCALING), get_kinematics_angle(XAXIS), ATTITUDE_XAXIS_PID_IDX);
     float pitchAttitudeCmd = updatePID(((receiverCommand[YAXIS]-receiverZero[XAXIS])*ATTITUDE_SCALING), -get_kinematics_angle(YAXIS), ATTITUDE_YAXIS_PID_IDX);
     motorAxisCommandRoll   = updatePID(rollAttitudeCmd, get_axis_gr(XAXIS)*1.2, ATTITUDE_GYRO_XAXIS_PID_IDX);
     motorAxisCommandPitch  = updatePID(pitchAttitudeCmd, -get_axis_gr(YAXIS)*1.2, ATTITUDE_GYRO_YAXIS_PID_IDX);
-
 }
-
-float x_kin_angle = 0.0;
-float y_kin_angle = 0.0;
 
 /**
  * processHeading
@@ -115,9 +107,6 @@ void processHeading()
     #else
       heading = degrees(gyroHeading);
     #endif
-
-      x_kin_angle = degrees(get_kinematics_angle(XAXIS));
-      y_kin_angle = degrees(get_kinematics_angle(YAXIS));
 
     // Always center relative heading around absolute heading chosen during yaw command
     // This assumes that an incorrect yaw can't be forced on the AeroQuad >180 or <-180 degrees
@@ -167,7 +156,6 @@ void processHeading()
   const float commandedYaw = constrain(getReceiverSIData(ZAXIS) + radians(headingHold), -PI, PI);
   motorAxisCommandYaw = updatePID(commandedYaw, get_axis_gr(ZAXIS), ZAXIS_PID_IDX);
 }
-
 
 //check motors... upon inspection, unsure if needed.
 void processMinMaxCommand()
@@ -267,16 +255,19 @@ void process_flight_control() {
 }
 
 // return the smoothed & scaled number of radians/sec in stick movement - zero centered
-const float getReceiverSIData(uint8_t channel) {
+const float getReceiverSIData(uint8_t channel)
+{
   return ((receiverCommand[channel] - receiverZero[channel]) * SI_SCALING);  // +/- 2.5RPS 50% of full rate
 }
 
 // return the smoothed & scaled number of radians/sec in stick movement - zero centered
-const float getReceiverAData(uint8_t channel) {
+const float getReceiverAData(uint8_t channel)
+{
   return ((receiverCommand[channel] - receiverZero[channel]) * ATTITUDE_SCALING);  // +/- 2.5RPS 50% of full rate
 }
 
-void applyMotorCommand() {
+void applyMotorCommand()
+{
   // Front = Front/Right, Back = Left/Rear, Left = Front/Left, Right = Right/Rear
   const int correctedThrottle = throttle - abs(motorAxisCommandYaw*2/4);
   motorCommand[FRONT_LEFT] = correctedThrottle - motorAxisCommandPitch + motorAxisCommandRoll - (YAW_DIRECTION * motorAxisCommandYaw);
@@ -285,14 +276,20 @@ void applyMotorCommand() {
   motorCommand[REAR_RIGHT] = correctedThrottle + motorAxisCommandPitch - motorAxisCommandRoll - (YAW_DIRECTION * motorAxisCommandYaw);
 }
 
-void writeMotors() {
+void writeMotors()
+{
 	pwm_set(pwm_motor1, (motorCommand[MOTOR1]-MIN_PWM_COMMAND)/COMMAND_PWM_RATIO);
 	pwm_set(pwm_motor2, (motorCommand[MOTOR2]-MIN_PWM_COMMAND)/COMMAND_PWM_RATIO);
 	pwm_set(pwm_motor3, (motorCommand[MOTOR3]-MIN_PWM_COMMAND)/COMMAND_PWM_RATIO);
 	pwm_set(pwm_motor4, (motorCommand[MOTOR4]-MIN_PWM_COMMAND)/(COMMAND_PWM_RATIO*2));
 }
 
-void write_raw_pid_command(uint8_t axis, int value){
+void write_raw_pid_command(uint8_t axis, int value)
+{
 	receiverCommand[axis] = value;
 }
 
+int read_raw_pid_command(uint8_t axis)
+{
+	return receiverCommand[axis];
+}

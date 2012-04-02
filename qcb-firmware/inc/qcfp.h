@@ -35,6 +35,7 @@ SOFTWARE.
 #define     QCFP_ASYNC_DATA_BAT      0x04
 #define     QCFP_ASYNC_DATA_EXP      0x05
 #define     QCFP_ASYNC_DATA_KIN      0x06
+#define QCFP_SET_THROTTLE            0x24
 #define QCFP_CALIBRATE_QUADROTOR     0x40
 #define QCFP_FLIGHT_MODE             0x41
 #define QCFP_RAW_MOTOR_CONTROL       0xF0

@@ -36,6 +36,7 @@ SOFTWARE.
 #define SENSOR_NUM_GYRO_BYTES            6
 
 #define SENSOR_ACCEL_ADDR                0x53
+#define     ADXL345_WHO                  0xE5
 #define     ADXL345_BW_RATE_ADDR         0x2C
 #define         ADXL345_RATE_400         0x0C
 #define         ADXL345_RATE_200         0x0B

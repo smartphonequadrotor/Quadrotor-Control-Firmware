@@ -52,8 +52,8 @@ long accelSample[3] = {0,0,0};
 uint8_t accelSampleCount = 0;
 
 void record_accel_sample(int16_t x, int16_t y, int16_t z ){
-	  accelSample[YAXIS] += x;
-	  accelSample[XAXIS] += y;
+	  accelSample[XAXIS] += x;
+	  accelSample[YAXIS] += y;
 	  accelSample[ZAXIS] += z ;
 	  accelSampleCount++;
 }

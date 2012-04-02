@@ -89,5 +89,6 @@ const float getReceiverAData(uint8_t channel);
 void applyMotorCommand(void);
 void writeMotors(void);
 void write_raw_pid_command(uint8_t axis, int value);
+int read_raw_pid_command(uint8_t axis);
 
 #endif /* FLIGHT_CONTROLLER_H_ */

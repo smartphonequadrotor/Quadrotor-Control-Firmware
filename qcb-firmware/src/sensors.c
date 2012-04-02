@@ -37,6 +37,7 @@ static bool mag_sample_collected = false;
 
 void sensors_check_calibration_complete(void);
 
+//static void sensor_accel_who(uint8_t buffer[], uint8_t length);
 static void sensor_accel_init_complete(uint8_t buffer[], uint8_t length);
 static void sensor_accel_sample(void);
 static void sensor_accel_read_complete(uint8_t buffer[], uint8_t length);
@@ -124,7 +125,7 @@ static void sensor_accel_sample(void)
 static void sensor_accel_read_complete(uint8_t buffer[], uint8_t length)
 {
 	//record accelerometer sample to sample buffer.
-	record_accel_sample((buffer[1] << 8) | buffer[0], (buffer[3] << 8) | buffer[2], (buffer[5] << 8) | buffer[4]);
+	record_accel_sample((buffer[3] << 8) | buffer[2], (buffer[1] << 8) | buffer[0], (buffer[5] << 8) | buffer[4]);
 
 	if((sensors_calibration_state == SENSORS_CALIBRATING) && (!accel_calibrated))
 	{
@@ -209,7 +210,15 @@ static void sensor_mag_read_complete(uint8_t buffer[], uint8_t length)
 	else if(sensors_calibration_state == SENSORS_CALIBRATED)
 	{
 #if defined MARG_KIN || defined DCM_KIN
-		read_compass(get_kinematics_angle(XAXIS),get_kinematics_angle(YAXIS));
+		read_compass(get_kinematics_angle(XAXIS), get_kinematics_angle(YAXIS));
 #endif
 	}
 }
+
+//static void sensor_accel_who(uint8_t buffer[], uint8_t length)
+//{
+//	if(buffer[0] == ADXL345_WHO)
+//	{
+//
+//	}
+//}
