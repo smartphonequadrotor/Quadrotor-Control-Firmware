@@ -105,7 +105,7 @@ void processHeading()
 	#if defined MARG_KIN || defined DCM_KIN
       heading = degrees(get_kinematics_angle(ZAXIS));
     #else
-      heading = degrees(gyroHeading);
+      heading = degrees(get_gyro_heading());
     #endif
 
     // Always center relative heading around absolute heading chosen during yaw command
@@ -281,7 +281,7 @@ void writeMotors()
 	pwm_set(pwm_motor1, (motorCommand[MOTOR1]-MIN_PWM_COMMAND)/COMMAND_PWM_RATIO);
 	pwm_set(pwm_motor2, (motorCommand[MOTOR2]-MIN_PWM_COMMAND)/COMMAND_PWM_RATIO);
 	pwm_set(pwm_motor3, (motorCommand[MOTOR3]-MIN_PWM_COMMAND)/COMMAND_PWM_RATIO);
-	pwm_set(pwm_motor4, (motorCommand[MOTOR4]-MIN_PWM_COMMAND)/(COMMAND_PWM_RATIO*2));
+	pwm_set(pwm_motor4, (motorCommand[MOTOR4]-MIN_PWM_COMMAND)/COMMAND_PWM_RATIO);
 }
 
 void write_raw_pid_command(uint8_t axis, int value)

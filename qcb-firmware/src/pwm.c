@@ -25,7 +25,7 @@ SOFTWARE.
 #define PWMC_CMR_CLKA       0x0B
 #define PWM_PERIOD          2000
 #define PWM_OFF_DUTY        90
-#define PWM_BASE_DUTY       110
+#define PWM_BASE_DUTY       116
 #define PWM_MAX_DUTY        190
 
 void pwm_init(void)
