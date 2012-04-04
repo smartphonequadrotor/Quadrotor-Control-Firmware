@@ -19,12 +19,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
+#include "qcb.h"
+
 #if defined DCM_KIN
 
 #include "pid/kinematics_DCM.h"
-
 #include "pid/globalDefined.h"
-#include "qcb.h"
 #include "pid/math.h"
 
 /*
@@ -77,7 +77,6 @@ float dcmMatrix[9] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
 float omegaP[3] = {0.0,0.0,0.0};
 float omegaI[3] = {0.0,0.0,0.0};
 float omega[3] = {0.0,0.0,0.0};
-float errorCourse = 0.0;
 float kpRollPitch = 0.0;
 float kiRollPitch = 0.0;
 float kpYaw = 0.0;
@@ -162,11 +161,9 @@ void driftCorrection(float ax, float ay, float az, float oneG, float magX, float
   float accelVector[3];
   float accelWeight;
   float errorRollPitch[3];
-  #ifdef HeadingMagHold
-    float errorCourse;
-    float errorYaw[3];
-    float scaledOmegaP[3];
-  #endif
+  float errorCourse;
+  float errorYaw[3];
+  float scaledOmegaP[3];
   float scaledOmegaI[3];
 
   //  Roll and Pitch Compensation
@@ -192,19 +189,13 @@ void driftCorrection(float ax, float ay, float az, float oneG, float magX, float
   vectorAdd(3, omegaI, omegaI, scaledOmegaI);
 
   //  Yaw Compensation
-  #ifdef HeadingMagHold
-    errorCourse = (dcmMatrix[0] * magY) - (dcmMatrix[3] * magX);
-    vectorScale(3, errorYaw, &dcmMatrix[6], errorCourse);
+  errorCourse = (dcmMatrix[0] * magY) - (dcmMatrix[3] * magX);
+  vectorScale(3, errorYaw, &dcmMatrix[6], errorCourse);
+  vectorScale(3, &scaledOmegaP[0], &errorYaw[0], kpYaw);
+  vectorAdd(3, omegaP, omegaP, scaledOmegaP);
+  vectorScale(3, &scaledOmegaI[0] ,&errorYaw[0], kiYaw);
+  vectorAdd(3, omegaI, omegaI, scaledOmegaI);
 
-    vectorScale(3, &scaledOmegaP[0], &errorYaw[0], kpYaw);
-    vectorAdd(3, omegaP, omegaP, scaledOmegaP);
-
-    vectorScale(3, &scaledOmegaI[0] ,&errorYaw[0], kiYaw);
-    vectorAdd(3, omegaI, omegaI, scaledOmegaI);
-  #else
-    omegaP[ZAXIS] = 0.0;
-    omegaI[ZAXIS] = 0.0;
-  #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -261,7 +261,7 @@ all: build
 all-download: build  sizebefore sizeafter download
 
 download:
-	gdb -x $(SUBMDL)_rom_jlink.gdb -ex quit
+	/yagarto/bin/arm-none-eabi-gdb.exe -x $(SUBMDL)_rom_jlink.gdb -ex quit
 
 build: elf hex bin lss sym
 
