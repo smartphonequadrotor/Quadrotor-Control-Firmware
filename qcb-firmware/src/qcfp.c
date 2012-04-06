@@ -252,6 +252,16 @@ void qcfp_send_kinematics_angles(void)
 	}
 }
 
+void qcfp_send_height_data(uint16_t height)
+{
+	uint8_t buffer[7];
+	buffer[0] = QCFP_ASYNC_DATA_HEIGHT;
+	qcfp_format_timestamp(&buffer[1]);
+	buffer[5] = (height & 0x000000FF) >> 0;
+	buffer[6] = (height & 0x0000FF00) >> 8;
+	qcfp_send_data(buffer, sizeof(buffer));
+}
+
 static void qcfp_handle_packet(uint8_t packet[], uint8_t length)
 {
 	uint8_t* payload;

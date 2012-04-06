@@ -48,6 +48,7 @@ SRC += src/main.c
 SRC += src/system.c
 SRC += src/pins.c
 # Drivers
+SRC += src/us0.c
 SRC += src/us1.c
 SRC += src/twi.c
 SRC += src/pwm.c

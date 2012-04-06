@@ -19,40 +19,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#ifndef _QCFP_H_
-#define _QCFP_H_
+#ifndef _US0_H_
+#define _US0_H_
 
 #include "qcb.h"
 
-// Corresponds to the max size of the buffers in the event queue
-#define QCFP_MAX_PACKET_SIZE 32
+void us0_init(void);
 
-// Commands
-#define QCFP_ASYNC_DATA              0x10
-#define     QCFP_ASYNC_DATA_ACCEL    0x01
-#define     QCFP_ASYNC_DATA_GYRO     0x02
-#define     QCFP_ASYNC_DATA_MAG      0x03
-#define     QCFP_ASYNC_DATA_BAT      0x04
-#define     QCFP_ASYNC_DATA_EXP      0x05
-#define     QCFP_ASYNC_DATA_KIN      0x06
-#define     QCFP_ASYNC_DATA_HEIGHT   0x07
-#define QCFP_SET_THROTTLE            0x24
-#define QCFP_CALIBRATE_QUADROTOR     0x40
-#define QCFP_FLIGHT_MODE             0x41
-#define QCFP_RAW_MOTOR_CONTROL       0xF0
-#define QCFP_CONTROL_METHOD_OVERRIDE 0xF1
-#define QCFP_NACK                    0xFF
-
-void qcfp_init(void);
-void qcfp_data_received(uint8_t buffer[], uint8_t buffer_size);
-void qcfp_send_data(uint8_t buffer[], uint8_t buffer_size);
-void qcfp_format_timestamp(uint8_t buffer[]);
-void qcfp_format_float_as_bytes(uint8_t buffer[], float f);
-
-bool qcfp_flight_enabled(void);
-bool qcfp_pid_enabled(void);
-void qcfp_send_calibration_state(void);
-void qcfp_send_kinematics_angles(void);
-void qcfp_send_height_data(uint16_t height);
-
-#endif // _QCFP_H_
+#endif // _US0_H_

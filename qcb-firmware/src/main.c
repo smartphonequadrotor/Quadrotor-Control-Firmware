@@ -22,6 +22,7 @@ SOFTWARE.
 #include "qcb.h"
 #include "system.h"
 #include "pins.h"
+#include "us0.h"
 #include "us1.h"
 #include "twi.h"
 #include "sensors.h"
@@ -37,6 +38,7 @@ int main(void)
 	system_init();
 	pins_init();
 	us1_init();
+	us0_init();
 	twi_init();
 	pwm_init();
 
