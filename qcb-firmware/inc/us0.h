@@ -19,46 +19,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
+#ifndef _US0_H_
+#define _US0_H_
+
 #include "qcb.h"
-#include "system.h"
-#include "pins.h"
-#include "us0.h"
-#include "us1.h"
-#include "twi.h"
-#include "sensors.h"
-#include "eq.h"
-#include "qcfp.h"
-#include "interrupts.h"
-#include "gpio.h"
 
-int main(void)
-{
-	// Enable peripherals
-	system_init();
-	pins_init();
-	us1_init();
-	us0_init();
-	twi_init();
+void us0_init(void);
 
-	// Initialize state machines
-	qcfp_init();
-	eq_init();
-
-	// Once everything is initialized, enable interrupts globally
-	interrupts_enable();
-
-	// Enable Expansion module 3 and 4 (sensors plugged into these temporarily)
-	AT91C_BASE_PIOA->PIO_CODR = AT91C_PIO_PA20;
-	AT91C_BASE_PIOA->PIO_CODR = AT91C_PIO_PA23;
-
-	sensors_init();
-
-	eq_post_timer(gpio_led_dance, 250, eq_timer_periodic);
-
-	while(1)
-	{
-		eq_dispatch();
-		eq_dispatch_timers();
-	}
-	return 0;
-}
+#endif // _US0_H_

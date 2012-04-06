@@ -34,6 +34,7 @@ SOFTWARE.
 #define     QCFP_ASYNC_DATA_MAG   0x03
 #define     QCFP_ASYNC_DATA_BAT   0x04
 #define     QCFP_ASYNC_DATA_EXP   0x05
+#define     QCFP_ASYNC_DATA_HEIGHT 0x07
 #define QCFP_CALIBRATE_QUADROTOR  0x40
 #define QCFP_FLIGHT_MODE          0x41
 #define QCFP_RAW_MOTOR_CONTROL    0xF0
@@ -43,5 +44,6 @@ void qcfp_init(void);
 void qcfp_data_received(uint8_t buffer[], uint8_t buffer_size);
 void qcfp_send_data(uint8_t buffer[], uint8_t buffer_size);
 void qcfp_format_timestamp(uint8_t buffer[]);
+void qcfp_send_height_data(uint16_t height);
 
 #endif // _QCFP_H_
