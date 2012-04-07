@@ -18,7 +18,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
-
+#include "qcb.h"
 #if defined MARG_KIN
 #include "pid/kinematics_MARG.h"
 
@@ -43,7 +43,6 @@ SOFTWARE.
 */
 
 #include "pid/globalDefined.h"
-#include "qcb.h"
 #include "pid/math.h"
 
 // This class is responsible for calculating vehicle attitude
@@ -246,8 +245,5 @@ void calculateKinematics(float rollRate,          float pitchRate,    float yawR
   eulerAngles();
 }
 
-float getGyroUnbias(uint8_t axis) {
-  return correctedRateVector[axis];
-}
 
 #endif

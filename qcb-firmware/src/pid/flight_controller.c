@@ -44,6 +44,7 @@ SOFTWARE.
 #include "pid/pid.h"
 #include "pid/kinematics_ARG.h"
 #include "pid/kinematics_MARG.h"
+#include "pid/kinematics_AHRS.h"
 #include "pid/kinematics_DCM.h"
 #include "pid/gyro.h"
 #include "system.h"

@@ -19,16 +19,33 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#include "qcb.h"
+//=====================================================================================================
+// MadgwickAHRS.h
+//=====================================================================================================
+//
+// Implementation of Madgwick's IMU and AHRS algorithms.
+// See: http://www.x-io.co.uk/node/8#open_source_ahrs_and_imu_algorithms
+//
+// Date			Author          Notes
+// 29/09/2011	SOH Madgwick    Initial release
+// 02/10/2011	SOH Madgwick	Optimised for reduced CPU load
+//
+//=====================================================================================================
 
-#if !(defined KINEMATICS_MARG_H_) && defined MARG_KIN
-#define KINEMATICS_MARG_H_
+#if !(defined KINEMATICS_AHRS_H_) && defined AHRS_KIN
+#define KINEMATICS_AHRS_H_
 
-#define CF 0
-#define KF 1
-#define DCM 2
-#define ARG 3
-#define MARG 4
+//----------------------------------------------------------------------------------------------------
+// Variable declaration
+
+extern volatile float beta;				// algorithm gain
+extern volatile float q0, q1, q2, q3;	// quaternion of sensor frame relative to auxiliary frame
+
+//---------------------------------------------------------------------------------------------------
+// Function declarations
+
+void MadgwickAHRSupdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
+void MadgwickAHRSupdateIMU(float gx, float gy, float gz, float ax, float ay, float az);
 
 float get_kinematics_angle(uint8_t axis);
 void initializeBaseKinematicsParam(float hdgX, float hdgY);
@@ -38,10 +55,10 @@ void calculateKinematics(float rollRate,          float pitchRate,    float yawR
         float measuredMagX,      float measuredMagY, float measuredMagZ,
 		 float G_Dt);
 
-void calibrateKinematics(void);
 const float kinematicsGetDegreesHeading(uint8_t axis);
 
 void margUpdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz, float G_Dt);
 void eulerAngles(void);
 
-#endif /* KINEMATICS_ARG_H_ */
+
+#endif /* KINEMATICS_AHRS_H_ */

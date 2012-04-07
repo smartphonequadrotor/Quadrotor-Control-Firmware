@@ -34,6 +34,8 @@ void kinematics_stop(void);
 #include "pid/kinematics_MARG.h"
 #elif defined DCM_KIN
 #include "pid/kinematics_DCM.h"
+#elif defined AHRS_KIN
+#include "pid/kinematics_AHRS.h"
 #endif
 
 #endif // _PID_KINEMATICS_H_

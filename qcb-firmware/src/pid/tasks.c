@@ -50,6 +50,7 @@ SOFTWARE.
 #include "pid/kinematics_ARG.h"
 #include "pid/kinematics_MARG.h"
 #include "pid/kinematics_DCM.h"
+#include "pid/kinematics_AHRS.h"
 #include "pid/globalDefined.h"
 #include "pid/flight_controller.h"
 
@@ -107,6 +108,17 @@ void pid_100Hz_task(){
 						get_accel_one_G(),
 						getHdgXY(XAXIS),
 						getHdgXY(YAXIS),
+						G_Dt);
+	#elif defined AHRS_KIN
+	calculateKinematics(get_axis_gr(XAXIS),
+						get_axis_gr(YAXIS),
+						get_axis_gr(ZAXIS),
+						filtered_accel[XAXIS],
+						filtered_accel[YAXIS],
+						filtered_accel[ZAXIS],
+						read_compass_raw(XAXIS),
+						read_compass_raw(YAXIS),
+						read_compass_raw(ZAXIS),
 						G_Dt);
 	#else
 		#error "Must define at least one of ARG_KIN, MARG_KIN, or DCM_KIN"

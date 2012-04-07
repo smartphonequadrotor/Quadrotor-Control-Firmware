@@ -71,4 +71,6 @@ void kinematics_stop(void)
 #include "kinematics_MARG.c"
 #elif defined DCM_KIN
 #include "kinematics_DCM.c"
+#elif defined AHRS_KIN
+#include "kinematics_AHRS.c"
 #endif

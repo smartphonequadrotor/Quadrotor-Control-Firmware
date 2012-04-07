@@ -374,14 +374,18 @@ bool isSwitched(float previousError, float currentError) {
   return false;
 }
 
-float invSqrt (float x){
-  union{
-    int32_t i;
-    float   f;
-  } conv;
-  conv.f = x;
-  conv.i = 0x5f3759df - (conv.i >> 1);
-  return 0.5f * conv.f * (3.0f - x * conv.f * conv.f);
+//---------------------------------------------------------------------------------------------------
+// Fast inverse square-root
+// See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
+
+float invSqrt(float x) {
+	float halfx = 0.5f * x;
+	float y = x;
+	long i = *(long*)&y;
+	i = 0x5f3759df - (i>>1);
+	y = *(float*)&i;
+	y = y * (1.5f - (halfx * y * y));
+	return y;
 }
 
 int32_t isq(int32_t  x) {
