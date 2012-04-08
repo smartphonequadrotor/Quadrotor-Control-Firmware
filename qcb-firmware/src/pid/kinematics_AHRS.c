@@ -48,7 +48,7 @@ SOFTWARE.
 //---------------------------------------------------------------------------------------------------
 // Definitions
 
-volatile float sampleFreq;       		// sample frequency in Hz
+volatile float samplePeriod;       		// sample period in seconds
 #define betaDef		0.1f		// 2 * proportional gain
 
 //---------------------------------------------------------------------------------------------------
@@ -150,10 +150,10 @@ void MadgwickAHRSupdate(float gx, float gy, float gz, float ax, float ay, float 
 	}
 
 	// Integrate rate of change of quaternion to yield quaternion
-	q0 += qDot1 * (1.0f / sampleFreq);
-	q1 += qDot2 * (1.0f / sampleFreq);
-	q2 += qDot3 * (1.0f / sampleFreq);
-	q3 += qDot4 * (1.0f / sampleFreq);
+	q0 += qDot1 * 1.0f / samplePeriod;
+	q1 += qDot2 * 1.0f / samplePeriod;
+	q2 += qDot3 * 1.0f / samplePeriod;
+	q3 += qDot4 * 1.0f / samplePeriod;
 
 	// Normalise quaternion
 	recipNorm = invSqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
@@ -221,10 +221,10 @@ void MadgwickAHRSupdateIMU(float gx, float gy, float gz, float ax, float ay, flo
 	}
 
 	// Integrate rate of change of quaternion to yield quaternion
-	q0 += qDot1 * (1.0f / sampleFreq);
-	q1 += qDot2 * (1.0f / sampleFreq);
-	q2 += qDot3 * (1.0f / sampleFreq);
-	q3 += qDot4 * (1.0f / sampleFreq);
+	q0 += qDot1 * samplePeriod;
+	q1 += qDot2 * samplePeriod;
+	q2 += qDot3 * samplePeriod;
+	q3 += qDot4 * samplePeriod;
 
 	// Normalise quaternion
 	recipNorm = invSqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
@@ -245,7 +245,7 @@ void calculateKinematics(float rollRate,          float pitchRate,    float yawR
                  float measuredMagX,      float measuredMagY, float measuredMagZ,
 				 float G_Dt) {
 
-	sampleFreq = 1000.0/G_Dt;
+	samplePeriod = G_Dt;
 	MadgwickAHRSupdate(rollRate,          pitchRate,    yawRate,
              longitudinalAccel, lateralAccel, verticalAccel,
              measuredMagX,      measuredMagY, measuredMagZ);
