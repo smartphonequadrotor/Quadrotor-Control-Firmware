@@ -49,7 +49,7 @@ SOFTWARE.
 // Definitions
 
 volatile float SamplePeriod;       		// sample period in seconds
-#define betaDef		0.045f		// 2 * proportional gain
+#define betaDef		0.65f		// 2 * proportional gain
 
 //---------------------------------------------------------------------------------------------------
 // Variable definitions
@@ -175,9 +175,12 @@ void calculateKinematics(float rollRate,          float pitchRate,    float yawR
 
 void eulerAngles(void)
 {
-  kinematicsAngle[XAXIS]  = atan2(2 * (q1*q2 + q3*q4), 1 - 2 *(q2*q2 + q3*q3));
-  kinematicsAngle[YAXIS] = asin(2 * (q1*q3 - q2*q4));
+	//we swap X and Y to get desired orientation...
+  kinematicsAngle[XAXIS]  = -asin(2 * (q1*q3 - q2*q4));
+  kinematicsAngle[YAXIS] = atan2(2 * (q1*q2 + q3*q4), 1 - 2 *(q2*q2 + q3*q3));
   kinematicsAngle[ZAXIS]   = atan2(2 * (q1*q4 + q2*q3), 1 - 2 *(q3*q3 + q4*q4));
+
+
 }
 
 #endif

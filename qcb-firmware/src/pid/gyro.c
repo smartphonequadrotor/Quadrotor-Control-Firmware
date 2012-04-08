@@ -45,7 +45,7 @@ void evaluateGyroRate() {
 	int gyroADC[3];
 	gyroADC[XAXIS] = (gyroSample[XAXIS] / gyroSampleCount) - gyroZero[XAXIS];
 	gyroADC[YAXIS] = (gyroSample[YAXIS] / gyroSampleCount) - gyroZero[YAXIS];
-	gyroADC[ZAXIS] = gyroZero[ZAXIS] - (gyroSample[ZAXIS] / gyroSampleCount);
+	gyroADC[ZAXIS] =  gyroZero[ZAXIS] - (gyroSample[ZAXIS] / gyroSampleCount) ;
 	//reset sampling
 	gyroSample[XAXIS] = 0;
     gyroSample[YAXIS] = 0;
@@ -77,7 +77,7 @@ void computeGyroBias() {
   //TODO: We need to get exactly SAMPLECOUNT_G (400) gyro samples to compute bias.
   int gyroADC[3];
   for (uint8_t axis = 0; axis < 3; axis++) {
-	  gyroADC[axis] = ((float)(gyroSample[axis])/((float)SAMPLECOUNT_G));
+	  gyroADC[axis] = ((float)(gyroSample[axis])/((float)gyroSampleCount));
     gyroSample[axis] = 0;
   }
   gyroSampleCount = 0;

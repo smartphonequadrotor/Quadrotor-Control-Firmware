@@ -62,7 +62,7 @@ void record_accel_sample(int16_t x, int16_t y, int16_t z ){
 void evaluateMetersPerSec() {
 
   for (uint8_t axis = XAXIS; axis <= ZAXIS; axis++) {
-    meterPerSecSec[axis] = (accelSample[axis] / accelSampleCount) * accelScaleFactor[axis] + runTimeAccelBias[axis];
+    meterPerSecSec[axis] = (((float)accelSample[axis]) / (float)accelSampleCount) * accelScaleFactor[axis] + runTimeAccelBias[axis];
 	accelSample[axis] = 0;
   }
 
@@ -77,15 +77,15 @@ void reset_accel_samples(){
 }
 
 void computeAccelBias() {
-  for (uint8_t axis = 0; axis < 3; axis++) {
-    meterPerSecSec[axis] = ((float)(accelSample[axis])/((float)SAMPLECOUNT_A)) * accelScaleFactor[axis];
+  for (uint8_t axis = 0; axis <= ZAXIS; axis++) {
+    meterPerSecSec[axis] = ((float)(accelSample[axis])/((float)accelSampleCount)) * accelScaleFactor[axis];
     accelSample[axis] = 0;
   }
   accelSampleCount = 0;
 
   runTimeAccelBias[XAXIS] = -meterPerSecSec[XAXIS];
   runTimeAccelBias[YAXIS] = -meterPerSecSec[YAXIS];
-  runTimeAccelBias[ZAXIS] = -9.8065 - meterPerSecSec[ZAXIS];
+  runTimeAccelBias[ZAXIS] = 0;//-(9.8065 - meterPerSecSec[ZAXIS]);
 
   accelOneG = 9.8065; //abs(meterPerSecSec[ZAXIS] + runTimeAccelBias[ZAXIS]);
 }

@@ -147,7 +147,7 @@ static void sensor_accel_sample(void)
 static void sensor_accel_read_complete(uint8_t buffer[], uint8_t length)
 {
 	//record accelerometer sample to sample buffer.
-	record_accel_sample((buffer[3] << 8) | buffer[2], (buffer[1] << 8) | buffer[0], ((buffer[5] << 8) | buffer[4]));
+	record_accel_sample((buffer[3] << 8) | buffer[2], (buffer[1] << 8) | buffer[0], -((buffer[5] << 8) | buffer[4]));
 
 	if((sensors_calibration_state == SENSORS_CALIBRATING) && (!accel_calibrated))
 	{
