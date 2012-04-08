@@ -53,6 +53,9 @@ bool qcfp_flight_enabled(void);
 bool qcfp_pid_enabled(void);
 void qcfp_send_calibration_state(void);
 void qcfp_send_kinematics_angles(void);
+void qcfp_send_filtered_accel(float x, float y, float z);
+void qcfp_send_raw_mag(void);
+void qcfp_send_gyro_rate(void);
 void qcfp_send_height_data(uint16_t height);
 
 #endif // _QCFP_H_

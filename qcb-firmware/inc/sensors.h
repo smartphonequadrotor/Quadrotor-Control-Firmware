@@ -25,6 +25,8 @@ SOFTWARE.
 #include "qcb.h"
 
 #define SENSOR_GYRO_ADDR                 0x68
+#define     ITG3200_WHO_ADDR             0x00
+#define         ITG3200_WHO_ID           0x69
 #define     ITG3200_LPF_ADDR             0x16
 #define         ITG3200_10HZ_LPF         0x1D
 #define     ITG3200_RESET_ADDR           0x3E
@@ -36,7 +38,8 @@ SOFTWARE.
 #define SENSOR_NUM_GYRO_BYTES            6
 
 #define SENSOR_ACCEL_ADDR                0x53
-#define     ADXL345_WHO                  0xE5
+#define     ADXL345_WHO_ADDR             0x00
+#define         ADXL345_WHO_ID           0xE5
 #define     ADXL345_BW_RATE_ADDR         0x2C
 #define         ADXL345_RATE_400         0x0C
 #define         ADXL345_RATE_200         0x0B
@@ -53,6 +56,10 @@ SOFTWARE.
 #define SENSOR_NUM_ACCEL_BYTES           6
 
 #define SENSOR_MAG_ADDR                  0x1E
+#define     HMC5843_WHO_ADDR             0x0A
+#define         HMC5843_WHO_ID1          ('H')
+#define         HMC5843_WHO_ID2          ('4')
+#define         HMC5843_WHO_ID3          ('3')
 #define     HMC5843_MODE_ADDR            0x02
 #define         HMC5843_MODE_SINGLE_CONV 0x01
 #define     HMC5843_DATAX0_ADDR          0x03

@@ -36,7 +36,7 @@ SOFTWARE.
 
 #define TWI_CLOCK_RATE                   400000
 #define TWI_INTERRUPT_PRIORITY           0
-#define TWI_MAX_OUTSTANDING_TRANSACTIONS 10
+#define TWI_MAX_OUTSTANDING_TRANSACTIONS 20
 // Corresponds to the max size of the buffers in the event queue
 #define TWI_MAX_RX_SIZE                  32
 

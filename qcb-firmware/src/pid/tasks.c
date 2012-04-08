@@ -69,6 +69,8 @@ void pid_100Hz_task(){
 	evaluateMetersPerSec();
 	evaluateGyroRate();
 
+
+
 	//fourth order filter...
 	float filtered_accel[3] = {0.0,0.0,0.0};
 	for (uint8_t axis = XAXIS; axis <= ZAXIS; axis++) {
@@ -121,10 +123,21 @@ void pid_100Hz_task(){
 						read_compass_raw(ZAXIS),
 						G_Dt);
 	#else
-		#error "Must define at least one of ARG_KIN, MARG_KIN, or DCM_KIN"
+		#error "Must define at least one of ARG_KIN, MARG_KIN, DCM_KIN, or AHRS_KIN"
 	#endif
 
-	qcfp_send_kinematics_angles();
+	static int count = 0;
+	if(count == 0)
+	{
+		qcfp_send_kinematics_angles();
+		qcfp_send_filtered_accel(filtered_accel[XAXIS], filtered_accel[YAXIS], filtered_accel[ZAXIS]);
+//		qcfp_send_filtered_accel(meterPerSecSec[XAXIS], meterPerSecSec[YAXIS], meterPerSecSec[ZAXIS]);
+		qcfp_send_raw_mag();
+		qcfp_send_gyro_rate();
+	}
+
+	if(++count == 10)
+		count = 0;
 
 	if(qcfp_pid_enabled())
 	{

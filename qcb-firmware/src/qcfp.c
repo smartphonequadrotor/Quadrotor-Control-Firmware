@@ -28,6 +28,8 @@ SOFTWARE.
 #include "sensors.h"
 #include "pid/kinematics.h"
 #include "pid/pid.h"
+#include "pid/gyro.h"
+#include "pid/compass.h"
 #include "pid/flight_controller.h"
 
 // Max encoded packet size includes an extra byte at the start and end and
@@ -245,9 +247,62 @@ void qcfp_send_kinematics_angles(void)
 		buffer[0] = QCFP_ASYNC_DATA;
 		buffer[1] = QCFP_ASYNC_DATA_KIN;
 		qcfp_format_timestamp(&buffer[2]);
+
 		qcfp_format_float_as_bytes(&buffer[6], get_kinematics_angle(XAXIS));
 		qcfp_format_float_as_bytes(&buffer[10], get_kinematics_angle(YAXIS));
 		qcfp_format_float_as_bytes(&buffer[14], get_kinematics_angle(ZAXIS));
+
+		qcfp_send_data(buffer, sizeof(buffer));
+	}
+}
+
+void qcfp_send_filtered_accel(float x, float y, float z)
+{
+	uint8_t buffer[18];
+	if(sensors_get_calibration_state() == SENSORS_CALIBRATED)
+	{
+		buffer[0] = QCFP_ASYNC_DATA;
+		buffer[1] = QCFP_ASYNC_DATA_ACCEL;
+		qcfp_format_timestamp(&buffer[2]);
+
+		qcfp_format_float_as_bytes(&buffer[6], x);
+		qcfp_format_float_as_bytes(&buffer[10], y);
+		qcfp_format_float_as_bytes(&buffer[14], z);
+
+		qcfp_send_data(buffer, sizeof(buffer));
+	}
+}
+
+void qcfp_send_raw_mag(void)
+{
+	uint8_t buffer[18];
+	if(sensors_get_calibration_state() == SENSORS_CALIBRATED)
+	{
+		buffer[0] = QCFP_ASYNC_DATA;
+		buffer[1] = QCFP_ASYNC_DATA_MAG;
+		qcfp_format_timestamp(&buffer[2]);
+
+		qcfp_format_float_as_bytes(&buffer[6], read_compass_raw(XAXIS));
+		qcfp_format_float_as_bytes(&buffer[10], read_compass_raw(YAXIS));
+		qcfp_format_float_as_bytes(&buffer[14], read_compass_raw(ZAXIS));
+
+		qcfp_send_data(buffer, sizeof(buffer));
+	}
+}
+
+void qcfp_send_gyro_rate(void)
+{
+	uint8_t buffer[18];
+	if(sensors_get_calibration_state() == SENSORS_CALIBRATED)
+	{
+		buffer[0] = QCFP_ASYNC_DATA;
+		buffer[1] = QCFP_ASYNC_DATA_GYRO;
+		qcfp_format_timestamp(&buffer[2]);
+
+		qcfp_format_float_as_bytes(&buffer[6], get_axis_gr(XAXIS));
+		qcfp_format_float_as_bytes(&buffer[10], get_axis_gr(YAXIS));
+		qcfp_format_float_as_bytes(&buffer[14], get_axis_gr(ZAXIS));
+
 		qcfp_send_data(buffer, sizeof(buffer));
 	}
 }

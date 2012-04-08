@@ -49,8 +49,7 @@ static uint8_t rx_buffer_2[QCFP_MAX_PACKET_SIZE];
 static uint8_t* current_buffer = rx_buffer_1;
 
 // Transmit circular buffer
-// TODO: Verify sufficient size for tx buffer
-#define TX_BUFFER_LENGTH 4*QCFP_MAX_PACKET_SIZE
+#define TX_BUFFER_LENGTH 12*QCFP_MAX_PACKET_SIZE
 static circular_buffer_t tx_circular_buffer;
 static uint8_t tx_buffer[TX_BUFFER_LENGTH];
 

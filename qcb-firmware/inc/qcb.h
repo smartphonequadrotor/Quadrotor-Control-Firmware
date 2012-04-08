@@ -43,7 +43,7 @@ SOFTWARE.
 // 3) DCM_KIN if using plain DCM filter using
 //		computed heading values rather than integrating
 //		raw values into kinematics.
-// 3) AHRS_KIN
+// 4) AHRS_KIN
 #define AHRS_KIN
 
 /*

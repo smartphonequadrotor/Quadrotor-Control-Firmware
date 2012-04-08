@@ -44,11 +44,12 @@ SOFTWARE.
 #include "pid/globalDefined.h"
 #include "pid/math.h"
 
-float accelScaleFactor[3] = {1.0,1.0,1.0};
+// 4mg per LSB so accel in m/s/s is the value read *0.004*g
+float accelScaleFactor[3] = {0.004*9.8065, 0.004*9.8065, 0.004*9.8065};
 float runTimeAccelBias[3] = {0, 0, 0};
 float accelOneG = 0.0;
-float meterPerSecSec[3] = {0.0,0.0,0.0};
-long accelSample[3] = {0,0,0};
+float meterPerSecSec[3] = {0.0, 0.0, 0.0};
+long accelSample[3] = {0, 0, 0};
 uint8_t accelSampleCount = 0;
 
 void record_accel_sample(int16_t x, int16_t y, int16_t z ){
@@ -76,10 +77,6 @@ void reset_accel_samples(){
 }
 
 void computeAccelBias() {
-
-  //TODO: We need to get exactly SAMPLECOUNT_A (400) accel samples to compute bias.
-
-
   for (uint8_t axis = 0; axis < 3; axis++) {
     meterPerSecSec[axis] = ((float)(accelSample[axis])/((float)SAMPLECOUNT_A)) * accelScaleFactor[axis];
     accelSample[axis] = 0;
@@ -90,7 +87,7 @@ void computeAccelBias() {
   runTimeAccelBias[YAXIS] = -meterPerSecSec[YAXIS];
   runTimeAccelBias[ZAXIS] = -9.8065 - meterPerSecSec[ZAXIS];
 
-  accelOneG = abs(meterPerSecSec[ZAXIS] + runTimeAccelBias[ZAXIS]);
+  accelOneG = 9.8065; //abs(meterPerSecSec[ZAXIS] + runTimeAccelBias[ZAXIS]);
 }
 
 float get_axis_mps(uint8_t axis){
