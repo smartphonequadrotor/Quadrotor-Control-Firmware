@@ -57,7 +57,7 @@ void kinematics_init(void)
 
 	setupFourthOrder(); //initializes the fourth order filter stuff...
 
-	eq_post_timer(pid_100Hz_task, 10*SYSTEM_1_MS, eq_timer_periodic);
+	eq_post_timer(pid_100Hz_task, KINEMATICS_UPDATE_PERIOD, eq_timer_periodic);
 }
 
 void kinematics_stop(void)

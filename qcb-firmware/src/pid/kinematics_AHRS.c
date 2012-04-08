@@ -49,7 +49,7 @@ SOFTWARE.
 // Definitions
 
 volatile float samplePeriod;       		// sample period in seconds
-#define betaDef		0.1f		// 2 * proportional gain
+#define betaDef		2.0f		// 2 * proportional gain
 
 //---------------------------------------------------------------------------------------------------
 // Variable definitions

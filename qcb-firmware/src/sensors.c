@@ -147,7 +147,7 @@ static void sensor_accel_sample(void)
 static void sensor_accel_read_complete(uint8_t buffer[], uint8_t length)
 {
 	//record accelerometer sample to sample buffer.
-	record_accel_sample((buffer[3] << 8) | buffer[2], (buffer[1] << 8) | buffer[0], -((buffer[5] << 8) | buffer[4]));
+	record_accel_sample((buffer[3] << 8) | buffer[2], (buffer[1] << 8) | buffer[0], ((buffer[5] << 8) | buffer[4]));
 
 	if((sensors_calibration_state == SENSORS_CALIBRATING) && (!accel_calibrated))
 	{
@@ -219,7 +219,7 @@ static void sensor_mag_read_complete(uint8_t buffer[], uint8_t length)
 {
 	mag_sample_collected = true;
 
-	record_compass_sample((buffer[0] << 8) | buffer[1], -((buffer[2] << 8) | buffer[3]), -((buffer[4] << 8) | buffer[5]));
+	record_compass_sample((buffer[0] << 8) | buffer[1], -((buffer[2] << 8) | buffer[3]), ((buffer[4] << 8) | buffer[5]));
 
 	if(sensors_calibration_state == SENSORS_CALIBRATING)
 	{

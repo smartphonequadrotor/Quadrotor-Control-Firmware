@@ -116,7 +116,7 @@ void pid_100Hz_task(){
 						get_axis_gr(YAXIS),
 						get_axis_gr(ZAXIS),
 						filtered_accel[XAXIS],
-						filtered_accel[YAXIS],
+						-filtered_accel[YAXIS],
 						filtered_accel[ZAXIS],
 						read_compass_raw(XAXIS),
 						read_compass_raw(YAXIS),
@@ -136,7 +136,7 @@ void pid_100Hz_task(){
 		qcfp_send_gyro_rate();
 	}
 
-	if(++count == 10)
+	if(++count == 25)
 		count = 0;
 
 	if(qcfp_pid_enabled())
