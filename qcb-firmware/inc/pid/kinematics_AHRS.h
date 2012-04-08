@@ -35,11 +35,6 @@ SOFTWARE.
 #if !(defined KINEMATICS_AHRS_H_) && defined AHRS_KIN
 #define KINEMATICS_AHRS_H_
 
-//----------------------------------------------------------------------------------------------------
-// Variable declaration
-
-extern volatile float beta = .1f;				// algorithm gain
-extern volatile float q0 = 1.0f, q1, q2, q3;	// quaternion of sensor frame relative to auxiliary frame
 
 //---------------------------------------------------------------------------------------------------
 // Function declarations

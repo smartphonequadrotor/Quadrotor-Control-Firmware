@@ -112,15 +112,15 @@ void pid_100Hz_task(){
 						getHdgXY(YAXIS),
 						G_Dt);
 	#elif defined AHRS_KIN
-	calculateKinematics(get_axis_gr(XAXIS),
-						get_axis_gr(YAXIS),
+	calculateKinematics(get_axis_gr(YAXIS),
+						get_axis_gr(XAXIS),
 						get_axis_gr(ZAXIS),
-						filtered_accel[XAXIS],
 						filtered_accel[YAXIS],
-						filtered_accel[ZAXIS],
-						read_compass_raw(XAXIS),
-						read_compass_raw(YAXIS),
-						read_compass_raw(ZAXIS),
+						filtered_accel[XAXIS],
+						-filtered_accel[ZAXIS],
+						-read_compass_raw(YAXIS),
+						-read_compass_raw(XAXIS),
+						-read_compass_raw(ZAXIS),
 						G_Dt);
 	#else
 		#error "Must define at least one of ARG_KIN, MARG_KIN, DCM_KIN, or AHRS_KIN"
@@ -135,8 +135,11 @@ void pid_100Hz_task(){
 		qcfp_send_raw_mag();
 		qcfp_send_gyro_rate();
 	}
+	else if(count == 3){
+		qcfp_send_kinematics_angles();
+	}
 
-	if(++count == 10)
+	if(++count == 6)
 		count = 0;
 
 	if(qcfp_pid_enabled())
