@@ -94,11 +94,6 @@ void sensors_set_calibration(bool on)
 		reset_accel_samples();
 		reset_gyro_samples();
 		sensors_calibration_state = SENSORS_CALIBRATING;
-//		sensors_calibration_state = SENSORS_CALIBRATED;
-//		gyro_calibrated = true;
-//		accel_calibrated = true;
-//		mag_sample_collected = true;
-//		sensors_check_calibration_complete();
 	}
 	else
 	{
@@ -115,18 +110,23 @@ uint8_t sensors_get_calibration_state(void)
 	return sensors_calibration_state;
 }
 
+static void sensors_complete_calibration(void)
+{
+	sensors_calibration_state = SENSORS_CALIBRATED;
+	gpio_set_leds(gpio_led_2);
+	qcfp_send_calibration_state();
+}
+
 void sensors_check_calibration_complete(void)
 {
-	if(accel_calibrated && gyro_calibrated)// && mag_sample_collected)
+	if(accel_calibrated && gyro_calibrated && mag_sample_collected)
 	{
 		// We have a magnetometer sample, initial roll/pitch should be 0 since
 		// the quadrotor is calibrating
 		// Read compass uses the sample and calculates a heading
 		read_compass(0.0, 0.0);
 		kinematics_init();
-		sensors_calibration_state = SENSORS_CALIBRATED;
-		gpio_set_leds(gpio_led_2);
-		qcfp_send_calibration_state();
+		eq_post_timer(sensors_complete_calibration, 30*SYSTEM_1_S, eq_timer_one_shot);
 	}
 }
 
