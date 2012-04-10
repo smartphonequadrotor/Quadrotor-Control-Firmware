@@ -44,7 +44,7 @@ SOFTWARE.
 //		computed heading values rather than integrating
 //		raw values into kinematics.
 // 4) AHRS_KIN
-#define AHRS_KIN
+#define DCM_KIN
 
 /*
  * TODO:

@@ -84,7 +84,7 @@ void pid_100Hz_task(){
 						get_axis_gr(ZAXIS),
 						filtered_accel[XAXIS],
 						filtered_accel[YAXIS],
-						filtered_accel[ZAXIS],
+						2.0*filtered_accel[ZAXIS],
 						read_compass_raw(XAXIS),
 						read_compass_raw(YAXIS),
 						read_compass_raw(ZAXIS),
@@ -112,15 +112,15 @@ void pid_100Hz_task(){
 						getHdgXY(YAXIS),
 						G_Dt);
 	#elif defined AHRS_KIN
-	calculateKinematics(get_axis_gr(XAXIS),
-						get_axis_gr(YAXIS),
+	calculateKinematics(get_axis_gr(YAXIS),
+						get_axis_gr(XAXIS),
 						get_axis_gr(ZAXIS),
+						filtered_accel[YAXIS],
 						filtered_accel[XAXIS],
-						-filtered_accel[YAXIS],
-						filtered_accel[ZAXIS],
+						-2.0*filtered_accel[ZAXIS],
 						read_compass_raw(XAXIS),
 						read_compass_raw(YAXIS),
-						read_compass_raw(ZAXIS),
+						-read_compass_raw(ZAXIS),
 						G_Dt);
 	#else
 		#error "Must define at least one of ARG_KIN, MARG_KIN, DCM_KIN, or AHRS_KIN"
@@ -130,10 +130,13 @@ void pid_100Hz_task(){
 	if(count == 0)
 	{
 		qcfp_send_kinematics_angles();
-		qcfp_send_filtered_accel(filtered_accel[XAXIS], filtered_accel[YAXIS], filtered_accel[ZAXIS]);
+	//	qcfp_send_filtered_accel(filtered_accel[XAXIS], filtered_accel[YAXIS], filtered_accel[ZAXIS]);
 //		qcfp_send_filtered_accel(meterPerSecSec[XAXIS], meterPerSecSec[YAXIS], meterPerSecSec[ZAXIS]);
-		qcfp_send_raw_mag();
-		qcfp_send_gyro_rate();
+	//	qcfp_send_raw_mag();
+	//	qcfp_send_gyro_rate();
+	}
+	else if(count == 3){
+		qcfp_send_kinematics_angles();
 	}
 
 	if(++count == 25)

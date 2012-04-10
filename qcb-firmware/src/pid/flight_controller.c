@@ -103,7 +103,7 @@ void calculateFlightError()
  */
 void processHeading()
 {
-	#if defined MARG_KIN || defined DCM_KIN
+	#if defined MARG_KIN || defined DCM_KIN || defined AHRS_KIN
       heading = degrees(get_kinematics_angle(ZAXIS));
     #else
       heading = degrees(get_gyro_heading());
@@ -215,7 +215,7 @@ void process_flight_control() {
   calculateFlightError();
 
   // ********************** Update Yaw ***************************************
-  processHeading();
+  //processHeading();
 
 /*
   // ********************** Process Altitude hold **************************

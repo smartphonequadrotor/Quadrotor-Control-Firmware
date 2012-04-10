@@ -35,10 +35,6 @@ SOFTWARE.
 #if !(defined KINEMATICS_AHRS_H_) && defined AHRS_KIN
 #define KINEMATICS_AHRS_H_
 
-//----------------------------------------------------------------------------------------------------
-// Variable declaration
-
-
 
 //---------------------------------------------------------------------------------------------------
 // Function declarations
