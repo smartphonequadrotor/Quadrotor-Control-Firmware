@@ -397,7 +397,7 @@ int32_t isq(int32_t  x) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-fourthOrderData fourthOrder[4];
+fourthOrderData fourthOrder[3];
 
 float computeFourthOrder(float currentInput, uint8_t index)
 {
@@ -461,6 +461,7 @@ void setupFourthOrder()
   fourthOrder[ZAXIS].outputTm2 = -9.8065;
   fourthOrder[ZAXIS].outputTm3 = -9.8065;
   fourthOrder[ZAXIS].outputTm4 = -9.8065;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

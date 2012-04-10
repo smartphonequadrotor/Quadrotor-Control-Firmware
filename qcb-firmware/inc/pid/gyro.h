@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include "qcb.h"
 
-#define SAMPLECOUNT_G 400
+#define SAMPLECOUNT_G 800
 
 
 /*

@@ -72,7 +72,7 @@ void pid_100Hz_task(){
 
 
 	//fourth order filter...
-	float filtered_accel[3] = {0.0,0.0,0.0};
+	float filtered_accel[4] = {0.0,0.0,0.0, 0.0};
 	for (uint8_t axis = XAXIS; axis <= ZAXIS; axis++) {
 		filtered_accel[axis] = computeFourthOrder(get_axis_mps(axis), axis);
 	}
@@ -84,7 +84,7 @@ void pid_100Hz_task(){
 						get_axis_gr(ZAXIS),
 						filtered_accel[XAXIS],
 						filtered_accel[YAXIS],
-						2.0*filtered_accel[ZAXIS],
+						filtered_accel[ZAXIS],
 						read_compass_raw(XAXIS),
 						read_compass_raw(YAXIS),
 						read_compass_raw(ZAXIS),
@@ -106,7 +106,7 @@ void pid_100Hz_task(){
 						get_axis_gr(ZAXIS),
 						filtered_accel[XAXIS],
 						filtered_accel[YAXIS],
-						filtered_accel[ZAXIS],
+						2.0f*filtered_accel[ZAXIS],
 						get_accel_one_G(),
 						getHdgXY(XAXIS),
 						getHdgXY(YAXIS),
@@ -117,10 +117,10 @@ void pid_100Hz_task(){
 						get_axis_gr(ZAXIS),
 						filtered_accel[YAXIS],
 						filtered_accel[XAXIS],
-						-2.0*filtered_accel[ZAXIS],
-						read_compass_raw(XAXIS),
+						filtered_accel[ZAXIS],
 						read_compass_raw(YAXIS),
-						-read_compass_raw(ZAXIS),
+						-read_compass_raw(XAXIS),
+						read_compass_raw(ZAXIS),
 						G_Dt);
 	#else
 		#error "Must define at least one of ARG_KIN, MARG_KIN, DCM_KIN, or AHRS_KIN"
@@ -131,16 +131,14 @@ void pid_100Hz_task(){
 	{
 		qcfp_send_kinematics_angles();
 	//	qcfp_send_filtered_accel(filtered_accel[XAXIS], filtered_accel[YAXIS], filtered_accel[ZAXIS]);
-//		qcfp_send_filtered_accel(meterPerSecSec[XAXIS], meterPerSecSec[YAXIS], meterPerSecSec[ZAXIS]);
+	//	qcfp_send_filtered_accel(meterPerSecSec[XAXIS], meterPerSecSec[YAXIS], meterPerSecSec[ZAXIS]);
 	//	qcfp_send_raw_mag();
 	//	qcfp_send_gyro_rate();
 	}
-	else if(count == 3){
-		qcfp_send_kinematics_angles();
-	}
 
-	if(++count == 25)
+	if(++count == 5){
 		count = 0;
+	}
 
 	if(qcfp_pid_enabled())
 	{

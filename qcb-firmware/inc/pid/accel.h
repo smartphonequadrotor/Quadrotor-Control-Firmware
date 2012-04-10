@@ -43,9 +43,10 @@ SOFTWARE.
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define SAMPLECOUNT_A 400
+#define SAMPLECOUNT_A 800
 
 extern float meterPerSecSec[3];
+
 
 void record_accel_sample(int16_t x, int16_t y, int16_t z );
 void evaluateMetersPerSec(void);

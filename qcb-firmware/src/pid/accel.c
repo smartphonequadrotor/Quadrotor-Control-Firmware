@@ -44,6 +44,7 @@ SOFTWARE.
 #include "pid/globalDefined.h"
 #include "pid/math.h"
 
+
 // 4mg per LSB so accel in m/s/s is the value read *0.004*g
 float accelScaleFactor[3] = {0.004*9.8065, 0.004*9.8065, 0.004*9.8065};
 float runTimeAccelBias[3] = {0, 0, 0};
@@ -55,7 +56,8 @@ uint8_t accelSampleCount = 0;
 void record_accel_sample(int16_t x, int16_t y, int16_t z ){
 	  accelSample[XAXIS] += x;
 	  accelSample[YAXIS] += y;
-	  accelSample[ZAXIS] += z ;
+	  accelSample[ZAXIS] += z;
+	  accelSample[ZAXIS] += z;
 	  accelSampleCount++;
 }
 
@@ -73,6 +75,7 @@ void reset_accel_samples(){
 	accelSample[XAXIS] = 0;
 	accelSample[YAXIS] = 0;
 	accelSample[ZAXIS] = 0;
+	accelSample[ZAXIS] = 0;
 	accelSampleCount = 0;
 }
 
@@ -86,7 +89,6 @@ void computeAccelBias() {
   runTimeAccelBias[XAXIS] = -meterPerSecSec[XAXIS];
   runTimeAccelBias[YAXIS] = -meterPerSecSec[YAXIS];
   runTimeAccelBias[ZAXIS] = 0;//-(9.8065 - meterPerSecSec[ZAXIS]);
-
   accelOneG = 9.8065; //abs(meterPerSecSec[ZAXIS] + runTimeAccelBias[ZAXIS]);
 }
 

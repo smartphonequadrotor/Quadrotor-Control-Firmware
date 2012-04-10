@@ -25,7 +25,7 @@ SOFTWARE.
 #include "qcb.h"
 #include "pid/globalDefined.h"
 
-#define KINEMATICS_UPDATE_PERIOD 20*SYSTEM_1_MS
+#define KINEMATICS_UPDATE_PERIOD 10*SYSTEM_1_MS
 
 void kinematics_init(void);
 void kinematics_stop(void);
