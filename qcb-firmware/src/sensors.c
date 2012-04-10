@@ -28,6 +28,7 @@ SOFTWARE.
 #include "pid/gyro.h"
 #include "pid/compass.h"
 #include "pid/kinematics.h"
+#include "pid/flight_controller.h"
 
 #define SENSOR_STARTUP_DELAY    (20*SYSTEM_1_MS)
 
@@ -114,6 +115,7 @@ static void sensors_complete_calibration(void)
 {
 	sensors_calibration_state = SENSORS_CALIBRATED;
 	gpio_set_leds(gpio_led_2);
+	reset_heading_values();
 	qcfp_send_calibration_state();
 }
 
@@ -126,7 +128,7 @@ void sensors_check_calibration_complete(void)
 		// Read compass uses the sample and calculates a heading
 		read_compass(0.0, 0.0);
 		kinematics_init();
-		eq_post_timer(sensors_complete_calibration, 10*SYSTEM_1_S, eq_timer_one_shot);
+		eq_post_timer(sensors_complete_calibration, 25*SYSTEM_1_S, eq_timer_one_shot);
 	}
 }
 

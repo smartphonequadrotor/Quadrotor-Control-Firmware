@@ -53,6 +53,9 @@ SOFTWARE.
 #define MINCOMMAND 1000
 #define MIDCOMMAND 1500
 #define MAXCOMMAND 2000
+//~ 2.5 degrees (2.5/360)*(2*PI)
+#define MIN_YAW	.0436
+
 #define MINDELTA 200
 #define MINCHECK (MINCOMMAND + 100)
 #define MAXCHECK (MAXCOMMAND - 100)
@@ -60,6 +63,10 @@ SOFTWARE.
 #define COMMAND_PWM_RATIO 13
 #define MIN_PWM_COMMAND 1025
 #define MIN_ARMED_THROTTLE 1150
+
+#define minThrottleAdjust -50
+#define maxThrottleAdjust 50
+#define altitudeHoldThrottle 1000;
 
 /*
        CW  0....Front....0 CCW
@@ -79,16 +86,19 @@ SOFTWARE.
 #define REAR_LEFT   MOTOR4
 #define LASTMOTOR   MOTOR4+1
 
+void set_desired_height(int height);
+void set_sensor_height(int height);
 void reset_heading_values(void);
+void processThrottleCorrection(void);
 void calculateFlightError(void);
 void processHeading(void);
+void processAltitudeHold(void);
 void processMinMaxCommand(void);
 void process_flight_control(void);
-const float getReceiverSIData(uint8_t channel);
-const float getReceiverAData(uint8_t channel);
 void applyMotorCommand(void);
 void writeMotors(void);
-void write_raw_pid_command(uint8_t axis, int value);
-int read_raw_pid_command(uint8_t axis);
+void write_throttle(int value);
+int read_throttle(void);
+void update_flight_control(float x, float y, float z);
 
 #endif /* FLIGHT_CONTROLLER_H_ */

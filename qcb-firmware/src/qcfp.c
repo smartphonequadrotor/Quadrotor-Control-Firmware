@@ -398,7 +398,7 @@ static bool qcfp_set_throttle(uint8_t payload[], uint8_t length)
 	uint16_t throttle = 0;
 	if(length < 2)
 	{
-		throttle = read_raw_pid_command(THROTTLE);
+		throttle = read_throttle();
 		response_buffer[1] = (throttle & 0x000000FF) >> 0;
 		response_buffer[2] = (throttle & 0x0000FF00) >> 8;
 		response_length = 3;
@@ -407,7 +407,7 @@ static bool qcfp_set_throttle(uint8_t payload[], uint8_t length)
 	{
 		throttle  = (payload[0] << 0) & 0x000000FF;
 		throttle |= (payload[1] << 8) & 0x0000FF00;
-		write_raw_pid_command(THROTTLE, throttle);
+		write_throttle(throttle);
 	}
 	return nack;
 }
@@ -423,7 +423,7 @@ static bool qcfp_set_desired_angles(uint8_t payload[], uint8_t length)
 		float roll = qcfp_format_bytes_as_float(&payload[0]);
 		float pitch = qcfp_format_bytes_as_float(&payload[4]);
 		float delta_yaw = qcfp_format_bytes_as_float(&payload[8]);
-		// TODO: Ryan update PID with these values
+		update_flight_control(roll, pitch, delta_yaw);
 	}
 	return nack;
 }
@@ -437,7 +437,7 @@ static bool qcfp_set_increment_height(uint8_t payload[], uint8_t length)
 	if(length >= 2)
 	{
 		int16_t delta_height = payload[0] & (payload[1] << 8);
-		// TODO: Ryan update PID with this value
+		set_desired_height(delta_height);
 	}
 	return nack;
 }

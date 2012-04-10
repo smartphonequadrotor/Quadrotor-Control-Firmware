@@ -52,7 +52,8 @@ SOFTWARE.
 #include "pwm.h"
 
 //values between 1000 to 2000
-int receiverCommand[4] = {1500, 1500, 1500, 1000};
+int receiverThrottle = 1000;
+float receiverCommand[3] = {0.0, 0.0, 0.0};
 int receiverZero[4] = {1500, 1500, 1500, 1000};
 int throttle = 1000;
 
@@ -63,6 +64,10 @@ uint8_t YAW_DIRECTION = 1;
 int motorAxisCommandRoll = 0;
 int motorAxisCommandPitch = 0;
 int motorAxisCommandYaw = 0;
+
+//altitude hold...
+int currentSensorAltitude = 0.0f;
+int altitudeTarget = 0.0f;
 
 //heading values...
 uint32_t headingTime = 0;
@@ -81,15 +86,21 @@ int motorCommand[4] = {0,0,0,0};
 void reset_heading_values()
 {
 	headingHold         = 0;
-	heading             = 0;
+	heading             = get_kinematics_angle(ZAXIS);
 	relativeHeading     = 0;
-	setHeading          = 0;
+	setHeading          = get_kinematics_angle(ZAXIS);
+}
+
+void update_flight_control(float x, float y, float z){
+	receiverCommand[XAXIS] = x;
+	receiverCommand[YAXIS] = y;
+	receiverCommand[ZAXIS] = z;
 }
 
 void calculateFlightError()
 {
-    float rollAttitudeCmd  = updatePID(((receiverCommand[XAXIS]-receiverZero[XAXIS])*ATTITUDE_SCALING), get_kinematics_angle(XAXIS), ATTITUDE_XAXIS_PID_IDX);
-    float pitchAttitudeCmd = updatePID(((receiverCommand[YAXIS]-receiverZero[XAXIS])*ATTITUDE_SCALING), -get_kinematics_angle(YAXIS), ATTITUDE_YAXIS_PID_IDX);
+    float rollAttitudeCmd  = updatePID(receiverCommand[XAXIS], get_kinematics_angle(XAXIS), ATTITUDE_XAXIS_PID_IDX);
+    float pitchAttitudeCmd = updatePID(receiverCommand[YAXIS], -get_kinematics_angle(YAXIS), ATTITUDE_YAXIS_PID_IDX);
     motorAxisCommandRoll   = updatePID(rollAttitudeCmd, get_axis_gr(XAXIS)*1.2, ATTITUDE_GYRO_XAXIS_PID_IDX);
     motorAxisCommandPitch  = updatePID(pitchAttitudeCmd, -get_axis_gr(YAXIS)*1.2, ATTITUDE_GYRO_YAXIS_PID_IDX);
 }
@@ -124,7 +135,7 @@ void processHeading()
 
     // Apply heading hold only when throttle high enough to start flight
     uint32_t currentTime = system_uptime();
-      if ((receiverCommand[ZAXIS] > (MIDCOMMAND + 25)) || (receiverCommand[ZAXIS] < (MIDCOMMAND - 25))) {
+      if ((receiverCommand[ZAXIS] > MIN_YAW) || (receiverCommand[ZAXIS] < MIN_YAW)) {
         // If commanding yaw, turn off heading hold and store latest heading
         setHeading = heading;
         headingHold = 0;
@@ -154,7 +165,7 @@ void processHeading()
       }
 
   // NEW SI Version
-  const float commandedYaw = constrain(getReceiverSIData(ZAXIS) + radians(headingHold), -PI, PI);
+  const float commandedYaw = constrain(receiverCommand[ZAXIS] + radians(headingHold), -PI, PI);
   motorAxisCommandYaw = updatePID(commandedYaw, get_axis_gr(ZAXIS), ZAXIS_PID_IDX);
 }
 
@@ -204,6 +215,48 @@ void processMinMaxCommand()
   }
 }
 
+void set_desired_height(int height){
+	altitudeTarget = height;
+}
+void set_sensor_height(int height){
+	currentSensorAltitude = height;
+}
+
+void processAltitudeHold()
+{
+  // ****************************** Altitude Adjust *************************
+  // Thanks to Honk for his work with altitude hold
+  // http://aeroquad.com/showthread.php?792-Problems-with-BMP085-I2C-barometer
+  // Thanks to Sherbakov for his work in Z Axis dampening
+  // http://aeroquad.com/showthread.php?359-Stable-flight-logic...&p=10325&viewfull=1#post10325
+
+
+      int altitudeHoldThrottleCorrection = updatePID(altitudeTarget, currentSensorAltitude, ALTITUDE_HOLD_PID_IDX);
+      altitudeHoldThrottleCorrection = constrain(altitudeHoldThrottleCorrection, minThrottleAdjust, maxThrottleAdjust);
+      throttle += altitudeHoldThrottleCorrection;
+
+}
+
+
+/**
+ * processThrottleCorrection
+ *
+ * This function will add some throttle imput if the craft is angled
+ * this prevent the craft to loose altitude when angled.
+ * it also add the battery throttle correction in case
+ * of we are in auto-descent.
+ *
+ * Special thank to Ziojo for this.
+ */
+void processThrottleCorrection() {
+
+  int throttleAsjust = throttle / (cos (get_kinematics_angle(XAXIS)) * cos (get_kinematics_angle(YAXIS)));
+  throttleAsjust = constrain ((throttleAsjust - throttle), 0, 160); //compensate max  +/- 25 deg XAXIS or YAXIS or  +/- 18 ( 18(XAXIS) + 18(YAXIS))
+  throttle = throttle + throttleAsjust;
+
+  throttle = constrain(throttle,MINCOMMAND,MAXCOMMAND-150);  // limmit throttle to leave some space for motor correction in max throttle manuever
+}
+
 /**
  * processFlightControl
  *
@@ -215,17 +268,17 @@ void process_flight_control() {
   calculateFlightError();
 
   // ********************** Update Yaw ***************************************
-  //processHeading();
+  processHeading();
 
-/*
+
   // ********************** Process Altitude hold **************************
     processAltitudeHold();
-    // ********************** Process throttle correction ********************
+/*    // ********************** Process throttle correction ********************
     processThrottleCorrection();
 */
 
   //MANUALLY setting throttle instead of handling in processAltitudeHold.
-  throttle = receiverCommand[THROTTLE];
+  throttle = receiverThrottle;
 
   // ********************** Calculate Motor Commands *************************
   if (qcfp_flight_enabled()) {
@@ -238,7 +291,7 @@ void process_flight_control() {
   //processHardManuevers();
 
   // If throttle in minimum position, don't apply yaw
-  if (receiverCommand[THROTTLE] < MINCHECK) {
+  if (receiverThrottle < MINCHECK) {
     for (uint8_t motor = 0; motor < LASTMOTOR; motor++) {
       motorMaxCommand[motor] = MIN_ARMED_THROTTLE;
     }
@@ -255,17 +308,6 @@ void process_flight_control() {
   }
 }
 
-// return the smoothed & scaled number of radians/sec in stick movement - zero centered
-const float getReceiverSIData(uint8_t channel)
-{
-  return ((receiverCommand[channel] - receiverZero[channel]) * SI_SCALING);  // +/- 2.5RPS 50% of full rate
-}
-
-// return the smoothed & scaled number of radians/sec in stick movement - zero centered
-const float getReceiverAData(uint8_t channel)
-{
-  return ((receiverCommand[channel] - receiverZero[channel]) * ATTITUDE_SCALING);  // +/- 2.5RPS 50% of full rate
-}
 
 void applyMotorCommand()
 {
@@ -285,12 +327,12 @@ void writeMotors()
 	pwm_set(pwm_motor4, (motorCommand[MOTOR4]-MIN_PWM_COMMAND)/COMMAND_PWM_RATIO);
 }
 
-void write_raw_pid_command(uint8_t axis, int value)
+void write_throttle(int value)
 {
-	receiverCommand[axis] = value;
+		receiverThrottle = value;
 }
 
-int read_raw_pid_command(uint8_t axis)
+int read_throttle()
 {
-	return receiverCommand[axis];
+	return receiverThrottle;
 }
