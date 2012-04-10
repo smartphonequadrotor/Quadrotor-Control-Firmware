@@ -37,6 +37,8 @@ SOFTWARE.
 #define     QCFP_ASYNC_DATA_KIN      0x06
 #define     QCFP_ASYNC_DATA_HEIGHT   0x07
 #define QCFP_SET_THROTTLE            0x24
+#define QCFP_SET_DESIRED_ANGLE       0x25
+#define QCFP_INCREMENT_HEIGHT        0x26
 #define QCFP_CALIBRATE_QUADROTOR     0x40
 #define QCFP_FLIGHT_MODE             0x41
 #define QCFP_RAW_MOTOR_CONTROL       0xF0

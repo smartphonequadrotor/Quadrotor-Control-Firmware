@@ -57,6 +57,8 @@ static uint8_t response_length;
 static void qcfp_handle_packet(uint8_t packet[], uint8_t length);
 
 static bool qcfp_set_throttle(uint8_t payload[], uint8_t length);
+static bool qcfp_set_desired_angles(uint8_t payload[], uint8_t length);
+static bool qcfp_set_increment_height(uint8_t payload[], uint8_t length);
 static bool qcfp_calibrate_quadrotor_handler(uint8_t payload[], uint8_t length);
 static bool qcfp_flight_mode_handler(uint8_t payload[], uint8_t length);
 static bool qcfp_raw_motor_control_handler(uint8_t payload[], uint8_t length);
@@ -221,6 +223,22 @@ void qcfp_format_float_as_bytes(uint8_t buffer[], float f)
 	}
 }
 
+float qcfp_format_bytes_as_float(uint8_t buffer[])
+{
+	typedef union f_b
+	{
+		float f;
+		uint8_t b[0];
+	} f_b;
+
+	f_b float_to_bytes;
+	for(int i = 0; i < sizeof(f_b); i++)
+	{
+		float_to_bytes.b[i] = buffer[i];
+	}
+	return float_to_bytes.f;
+}
+
 bool qcfp_flight_enabled(void)
 {
 	return flight_mode;
@@ -333,6 +351,12 @@ static void qcfp_handle_packet(uint8_t packet[], uint8_t length)
 		case QCFP_SET_THROTTLE:
 			nack = qcfp_set_throttle(payload, payload_length);
 			break;
+		case QCFP_INCREMENT_HEIGHT:
+			nack = qcfp_set_increment_height(payload, payload_length);
+			break;
+		case QCFP_SET_DESIRED_ANGLE:
+			nack = qcfp_set_desired_angles(payload, payload_length);
+			break;
 		case QCFP_CALIBRATE_QUADROTOR:
 			nack = qcfp_calibrate_quadrotor_handler(payload, payload_length);
 			break;
@@ -384,6 +408,36 @@ static bool qcfp_set_throttle(uint8_t payload[], uint8_t length)
 		throttle  = (payload[0] << 0) & 0x000000FF;
 		throttle |= (payload[1] << 8) & 0x0000FF00;
 		write_raw_pid_command(THROTTLE, throttle);
+	}
+	return nack;
+}
+
+// ===========================================================================
+// 0x25
+// ===========================================================================
+static bool qcfp_set_desired_angles(uint8_t payload[], uint8_t length)
+{
+	bool nack = false;
+	if(length >= 12)
+	{
+		float roll = qcfp_format_bytes_as_float(&payload[0]);
+		float pitch = qcfp_format_bytes_as_float(&payload[4]);
+		float delta_yaw = qcfp_format_bytes_as_float(&payload[8]);
+		// TODO: Ryan update PID with these values
+	}
+	return nack;
+}
+
+// ===========================================================================
+// 0x26
+// ===========================================================================
+static bool qcfp_set_increment_height(uint8_t payload[], uint8_t length)
+{
+	bool nack = false;
+	if(length >= 2)
+	{
+		int16_t delta_height = payload[0] & (payload[1] << 8);
+		// TODO: Ryan update PID with this value
 	}
 	return nack;
 }
