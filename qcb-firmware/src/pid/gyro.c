@@ -32,7 +32,7 @@ static float gyroSmoothFactor = 1.0;
 static float gyroScaleFactor = radians(1.0 / 14.375);  //  ITG3200 14.375 LSBs per °/sec
 static float gyroHeading = 0.0;
 static unsigned long gyroLastMesuredTime = 0;
-static uint8_t gyroSampleCount = 0;
+static uint16_t gyroSampleCount = 0;
 
 void record_gyro_sample(int16_t x, int16_t y, int16_t z ){
 	gyroSample[XAXIS] += x;

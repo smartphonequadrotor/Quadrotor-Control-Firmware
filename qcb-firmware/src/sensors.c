@@ -227,7 +227,7 @@ static void sensor_mag_read_complete(uint8_t buffer[], uint8_t length)
 	}
 	else if(sensors_calibration_state == SENSORS_CALIBRATED)
 	{
-#if defined MARG_KIN || defined DCM_KIN
+#if defined MARG_KIN || defined DCM_KIN || defined AHRS_KIN
 		read_compass(get_kinematics_angle(XAXIS), get_kinematics_angle(YAXIS));
 #endif
 	}

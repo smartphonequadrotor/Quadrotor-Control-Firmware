@@ -46,12 +46,12 @@ SOFTWARE.
 
 
 // 4mg per LSB so accel in m/s/s is the value read *0.004*g
-float accelScaleFactor[3] = {0.004*9.8065, 0.004*9.8065, 0.004*9.8065};
-float runTimeAccelBias[3] = {0, 0, 0};
-float accelOneG = 0.0;
-float meterPerSecSec[3] = {0.0, 0.0, 0.0};
-long accelSample[3] = {0, 0, 0};
-uint8_t accelSampleCount = 0;
+static float accelScaleFactor[3] = {0.004*9.8065, 0.004*9.8065, 0.004*9.8065};
+static float runTimeAccelBias[3] = {0, 0, 0};
+static float accelOneG = 0.0;
+static float meterPerSecSec[3] = {0.0, 0.0, 0.0};
+static long accelSample[3] = {0, 0, 0};
+static uint16_t accelSampleCount = 0;
 
 void record_accel_sample(int16_t x, int16_t y, int16_t z ){
 	  accelSample[XAXIS] += x;
