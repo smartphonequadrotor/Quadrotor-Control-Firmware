@@ -269,15 +269,14 @@ void process_flight_control() {
   // ********************** Update Yaw ***************************************
   processHeading();
 
+  //MANUALLY setting throttle instead of handling in processAltitudeHold.
+  throttle = receiverThrottle;
 
   // ********************** Process Altitude hold **************************
     processAltitudeHold();
-/*    // ********************** Process throttle correction ********************
+    // ********************** Process throttle correction ********************
     processThrottleCorrection();
-*/
 
-  //MANUALLY setting throttle instead of handling in processAltitudeHold.
-  throttle = receiverThrottle;
 
   // ********************** Calculate Motor Commands *************************
   if (qcfp_flight_enabled()) {
@@ -311,7 +310,7 @@ void process_flight_control() {
 void applyMotorCommand()
 {
   // Front = Front/Right, Back = Left/Rear, Left = Front/Left, Right = Right/Rear
-  const int correctedThrottle = throttle - abs(motorAxisCommandYaw*2/4);
+  int correctedThrottle = throttle - abs(motorAxisCommandYaw*2/4);
   motorCommand[FRONT_LEFT] = correctedThrottle - motorAxisCommandPitch + motorAxisCommandRoll - (YAW_DIRECTION * motorAxisCommandYaw);
   motorCommand[FRONT_RIGHT] = correctedThrottle - motorAxisCommandPitch - motorAxisCommandRoll + (YAW_DIRECTION * motorAxisCommandYaw);
   motorCommand[REAR_LEFT] = correctedThrottle + motorAxisCommandPitch + motorAxisCommandRoll + (YAW_DIRECTION * motorAxisCommandYaw);
