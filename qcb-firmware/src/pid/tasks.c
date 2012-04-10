@@ -84,7 +84,7 @@ void pid_100Hz_task(){
 						get_axis_gr(ZAXIS),
 						filtered_accel[XAXIS],
 						filtered_accel[YAXIS],
-						filtered_accel[ZAXIS],
+						-filtered_accel[ZAXIS],
 						read_compass_raw(XAXIS),
 						read_compass_raw(YAXIS),
 						read_compass_raw(ZAXIS),
@@ -106,7 +106,7 @@ void pid_100Hz_task(){
 						get_axis_gr(ZAXIS),
 						filtered_accel[XAXIS],
 						filtered_accel[YAXIS],
-						2.0f*filtered_accel[ZAXIS],
+						filtered_accel[ZAXIS],
 						get_accel_one_G(),
 						getHdgXY(XAXIS),
 						getHdgXY(YAXIS),
@@ -114,14 +114,14 @@ void pid_100Hz_task(){
 	#elif defined AHRS_KIN
 	calculateKinematics(get_axis_gr(YAXIS),
 						get_axis_gr(XAXIS),
-						get_axis_gr(ZAXIS),
+						-get_axis_gr(ZAXIS), //previously positive.
 						filtered_accel[YAXIS],
 						filtered_accel[XAXIS],
 						filtered_accel[ZAXIS],
 						read_compass_raw(YAXIS),
-						-read_compass_raw(XAXIS),
-						read_compass_raw(ZAXIS),
-						G_Dt);
+						read_compass_raw(XAXIS),//previously negated
+						-read_compass_raw(ZAXIS),//previously positive
+						G_Dt); //NOTE due to the z- axis flips, we also flipped the z- axis kinematics euler calculations.
 	#else
 		#error "Must define at least one of ARG_KIN, MARG_KIN, DCM_KIN, or AHRS_KIN"
 	#endif

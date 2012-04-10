@@ -44,7 +44,7 @@ void MadgwickAHRSupdateIMU(float gx, float gy, float gz, float ax, float ay, flo
 
 float get_kinematics_angle(uint8_t axis);
 void initializeBaseKinematicsParam(float hdgX, float hdgY);
-void initializeKinematics(float hdgX, float hdgY);
+void initializeKinematics(void);
 void calculateKinematics(float rollRate,          float pitchRate,    float yawRate,
         float longitudinalAccel, float lateralAccel, float verticalAccel,
         float measuredMagX,      float measuredMagY, float measuredMagZ,

@@ -57,7 +57,7 @@ volatile float SamplePeriod;       		// sample period in seconds
 // Variable definitions
 
 volatile float beta = betaDef;								// 2 * proportional gain (Kp)
-volatile float q1 = 1.0f, q2 = 0.0f, q3 = 0.0f, q4 = 0.0f;	// quaternion of sensor frame relative to auxiliary frame
+volatile float q1 = -1.0f, q2 = 0.0f, q3 = 0.0f, q4 = 0.0f;	// quaternion of sensor frame relative to auxiliary frame
 volatile float kinematicsAngle[3] = {0.0,0.0,0.0};
 //====================================================================================================
 // Functions
@@ -177,12 +177,46 @@ void calculateKinematics(float rollRate,          float pitchRate,    float yawR
 
 void eulerAngles(void)
 {
+
 	//we swap X and Y to get desired orientation...
   kinematicsAngle[XAXIS]  = asin(2 * (q1*q3 - q2*q4));
   kinematicsAngle[YAXIS] = atan2(2 * (q1*q2 + q3*q4), 1 - 2 *(q2*q2 + q3*q3));
-  kinematicsAngle[ZAXIS]   = atan2(2 * (q1*q4 + q2*q3), 1 - 2 *(q3*q3 + q4*q4));
+  kinematicsAngle[ZAXIS]   = -atan2(2 * (q1*q4 + q2*q3), 1 - 2 *(q3*q3 + q4*q4));
+  //Note that the previous configuration did NOT negate the z-axis!
+	/*
+float heading, bank, attitude;
 
+		float test = q2*q3 + q4*q1;
+		if (test > 0.4999f) { // singularity at north pole
+			heading = 2 * atan2(q2,q1);
+			attitude = PI/2;
+			bank = 0;
+			return;
+		}
+		if (test < -0.4999f) { // singularity at south pole
+			heading = -2 * atan2(q2,q1);
+			attitude = - PI/2;
+			bank = 0;
+			return;
+		}
+	    double sqx = q2*q2;
+	    double sqy = q3*q3;
+	    double sqz = q4*q4;
+	    heading = atan2(2*q2*q1-2*q2*q4 , 1 - 2*sqy - 2*sqz);
+		attitude = asin(2*test);
+		bank = atan2(2*q2*q1-2*q3*q4 , 1 - 2*sqx - 2*sqz);
 
+		kinematicsAngle[ZAXIS] = attitude;
+		kinematicsAngle[ZAXIS] = bank;
+		kinematicsAngle[ZAXIS] = -heading;
+*/
+}
+
+void initializeKinematics(){
+	q1 = -1.0f; q2 = 0.0f; q3 = 0.0f; q4 = 0.0f;	// quaternion of sensor frame relative to auxiliary frame
+	kinematicsAngle[0] = 0.0;
+	kinematicsAngle[1] = 0.0;
+	kinematicsAngle[2] = 0.0;
 }
 
 #endif

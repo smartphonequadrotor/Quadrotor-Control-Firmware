@@ -88,7 +88,7 @@ void computeAccelBias() {
 
   runTimeAccelBias[XAXIS] = -meterPerSecSec[XAXIS];
   runTimeAccelBias[YAXIS] = -meterPerSecSec[YAXIS];
-  runTimeAccelBias[ZAXIS] = 0;//-(9.8065 - meterPerSecSec[ZAXIS]);
+  runTimeAccelBias[ZAXIS] = 0;//(9.8065 - meterPerSecSec[ZAXIS]);
   accelOneG = 9.8065; //abs(meterPerSecSec[ZAXIS] + runTimeAccelBias[ZAXIS]);
 }
 

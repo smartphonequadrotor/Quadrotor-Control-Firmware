@@ -126,7 +126,7 @@ void sensors_check_calibration_complete(void)
 		// Read compass uses the sample and calculates a heading
 		read_compass(0.0, 0.0);
 		kinematics_init();
-		eq_post_timer(sensors_complete_calibration, 30*SYSTEM_1_S, eq_timer_one_shot);
+		eq_post_timer(sensors_complete_calibration, 10*SYSTEM_1_S, eq_timer_one_shot);
 	}
 }
 

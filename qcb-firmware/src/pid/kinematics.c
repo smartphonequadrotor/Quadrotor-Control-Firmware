@@ -53,6 +53,8 @@ void kinematics_init(void)
 	initializeKinematics(1.0, 0.0);  // with no compass (magnetometer), DCM matrix initalizes to a heading of 0 degrees
 	#elif defined MARG_KIN
 	initializeKinematics(getHdgXY(XAXIS), getHdgXY(YAXIS));
+	#elif defined AHRS_KIN
+	initializeKinematics();
 	#endif
 
 	setupFourthOrder(); //initializes the fourth order filter stuff...

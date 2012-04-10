@@ -452,15 +452,15 @@ void setupFourthOrder()
   fourthOrder[YAXIS].outputTm4 = 0.0;
 
   //////////
-  fourthOrder[ZAXIS].inputTm1 = -9.8065;
-  fourthOrder[ZAXIS].inputTm2 = -9.8065;
-  fourthOrder[ZAXIS].inputTm3 = -9.8065;
-  fourthOrder[ZAXIS].inputTm4 = -9.8065;
+  fourthOrder[ZAXIS].inputTm1 = 9.8065;
+  fourthOrder[ZAXIS].inputTm2 = 9.8065;
+  fourthOrder[ZAXIS].inputTm3 = 9.8065;
+  fourthOrder[ZAXIS].inputTm4 = 9.8065;
 
-  fourthOrder[ZAXIS].outputTm1 = -9.8065;
-  fourthOrder[ZAXIS].outputTm2 = -9.8065;
-  fourthOrder[ZAXIS].outputTm3 = -9.8065;
-  fourthOrder[ZAXIS].outputTm4 = -9.8065;
+  fourthOrder[ZAXIS].outputTm1 = 9.8065;
+  fourthOrder[ZAXIS].outputTm2 = 9.8065;
+  fourthOrder[ZAXIS].outputTm3 = 9.8065;
+  fourthOrder[ZAXIS].outputTm4 = 9.8065;
 
 }
 
