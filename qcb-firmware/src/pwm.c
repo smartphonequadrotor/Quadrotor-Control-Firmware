@@ -83,6 +83,8 @@ void pwm_set(pwm_motor m, int32_t value)
 	}
 
 	value += PWM_BASE_DUTY;
+	while(AT91C_BASE_PWMC->PWMC_CH[m].PWMC_CCNTR == (AT91C_BASE_PWMC->PWMC_CH[m].PWMC_CPRDR - 1) || AT91C_BASE_PWMC->PWMC_CH[m].PWMC_CCNTR == 0 || AT91C_BASE_PWMC->PWMC_CH[m].PWMC_CCNTR == 1 )
+	{}
 	AT91C_BASE_PWMC->PWMC_CH[m].PWMC_CUPDR = value;
 }
 
