@@ -86,7 +86,7 @@ SOFTWARE.
 #define REAR_LEFT   MOTOR4
 #define LASTMOTOR   MOTOR4+1
 
-void set_desired_height(int height);
+void set_desired_height_delta(int height);
 void set_sensor_height(int height);
 void reset_heading_values(void);
 void processThrottleCorrection(void);

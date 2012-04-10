@@ -54,7 +54,6 @@ SOFTWARE.
 //values between 1000 to 2000
 int receiverThrottle = 1000;
 float receiverCommand[3] = {0.0, 0.0, 0.0};
-int receiverZero[4] = {1500, 1500, 1500, 1000};
 int throttle = 1000;
 
 uint8_t maxLimit = OFF;
@@ -215,8 +214,8 @@ void processMinMaxCommand()
   }
 }
 
-void set_desired_height(int height){
-	altitudeTarget = height;
+void set_desired_height_delta(int height){
+	altitudeTarget = currentSensorAltitude + height;
 }
 void set_sensor_height(int height){
 	currentSensorAltitude = height;

@@ -23,6 +23,7 @@ SOFTWARE.
 #include "us1.h"
 #include "eq.h"
 #include "qcfp.h"
+#include "pid/flight_controller.h"
 
 // Defines
 #define US0_RX_TIMEOUT 100 // In bit periods, this corresponds to 10 byte times
@@ -138,6 +139,7 @@ void us0_height_data_received(uint8_t buffer[], uint8_t buffer_size)
 		{
 			height = (n1 - '0')*100 + (n2 - '0')*10 + (n3 - '0');
 			qcfp_send_height_data(height);
+			set_sensor_height(height);
 		}
 	}
 }
