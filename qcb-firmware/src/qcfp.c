@@ -436,7 +436,7 @@ static bool qcfp_set_increment_height(uint8_t payload[], uint8_t length)
 	bool nack = false;
 	if(length >= 2)
 	{
-		int16_t delta_height = payload[0] & (payload[1] << 8);
+		int16_t delta_height = payload[0] | (payload[1] << 8);
 		set_desired_height_delta(delta_height);
 	}
 	return nack;
