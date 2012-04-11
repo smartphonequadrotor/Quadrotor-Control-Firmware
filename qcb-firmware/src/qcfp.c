@@ -327,11 +327,12 @@ void qcfp_send_gyro_rate(void)
 
 void qcfp_send_height_data(uint16_t height)
 {
-	uint8_t buffer[7];
-	buffer[0] = QCFP_ASYNC_DATA_HEIGHT;
-	qcfp_format_timestamp(&buffer[1]);
-	buffer[5] = (height & 0x000000FF) >> 0;
-	buffer[6] = (height & 0x0000FF00) >> 8;
+	uint8_t buffer[8];
+	buffer[0] = QCFP_ASYNC_DATA;
+	buffer[1] = QCFP_ASYNC_DATA_HEIGHT;
+	qcfp_format_timestamp(&buffer[2]);
+	buffer[6] = (height & 0x000000FF) >> 0;
+	buffer[7] = (height & 0x0000FF00) >> 8;
 	qcfp_send_data(buffer, sizeof(buffer));
 }
 
@@ -403,7 +404,7 @@ static bool qcfp_set_throttle(uint8_t payload[], uint8_t length)
 		response_buffer[2] = (throttle & 0x0000FF00) >> 8;
 		response_length = 3;
 	}
-	else if(length >= 2)
+	else if((length >= 2) && (control_mode == QCFP_CONTROL_MODE_PID))
 	{
 		throttle  = (payload[0] << 0) & 0x000000FF;
 		throttle |= (payload[1] << 8) & 0x0000FF00;
@@ -418,7 +419,7 @@ static bool qcfp_set_throttle(uint8_t payload[], uint8_t length)
 static bool qcfp_set_desired_angles(uint8_t payload[], uint8_t length)
 {
 	bool nack = false;
-	if(length >= 12)
+	if((length >= 12) && (control_mode == QCFP_CONTROL_MODE_PID))
 	{
 		float roll = qcfp_format_bytes_as_float(&payload[0]);
 		float pitch = qcfp_format_bytes_as_float(&payload[4]);
@@ -434,7 +435,7 @@ static bool qcfp_set_desired_angles(uint8_t payload[], uint8_t length)
 static bool qcfp_set_increment_height(uint8_t payload[], uint8_t length)
 {
 	bool nack = false;
-	if(length >= 2)
+	if((length >= 2) && (control_mode == QCFP_CONTROL_MODE_PID))
 	{
 		int16_t delta_height = payload[0] | (payload[1] << 8);
 		set_desired_height_delta(delta_height);
