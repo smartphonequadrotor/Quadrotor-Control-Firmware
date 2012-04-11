@@ -63,12 +63,15 @@ void record_accel_sample(int16_t x, int16_t y, int16_t z ){
 
 void evaluateMetersPerSec() {
 
-  for (uint8_t axis = XAXIS; axis <= ZAXIS; axis++) {
-    meterPerSecSec[axis] = (((float)accelSample[axis]) / (float)accelSampleCount) * accelScaleFactor[axis] + runTimeAccelBias[axis];
-	accelSample[axis] = 0;
-  }
+	if(accelSampleCount){
+	  for (uint8_t axis = XAXIS; axis <= ZAXIS; axis++) {
+		meterPerSecSec[axis] = (((float)accelSample[axis]) / (float)accelSampleCount) * accelScaleFactor[axis] + runTimeAccelBias[axis];
+		accelSample[axis] = 0;
+	  }
 
-  accelSampleCount = 0;
+	  accelSampleCount = 0;
+	}
+
 }
 
 void reset_accel_samples(){

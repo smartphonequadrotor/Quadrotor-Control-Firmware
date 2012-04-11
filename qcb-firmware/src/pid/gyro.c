@@ -42,26 +42,29 @@ void record_gyro_sample(int16_t x, int16_t y, int16_t z ){
 }
 
 void evaluateGyroRate() {
-	int gyroADC[3];
-	gyroADC[XAXIS] = (gyroSample[XAXIS] / gyroSampleCount) - gyroZero[XAXIS];
-	gyroADC[YAXIS] = (gyroSample[YAXIS] / gyroSampleCount) - gyroZero[YAXIS];
-	gyroADC[ZAXIS] =  gyroZero[ZAXIS] - (gyroSample[ZAXIS] / gyroSampleCount) ;
-	//reset sampling
-	gyroSample[XAXIS] = 0;
-    gyroSample[YAXIS] = 0;
-    gyroSample[ZAXIS] = 0;
-    gyroSampleCount = 0;
+	if(gyroSampleCount){
+		int gyroADC[3];
+		gyroADC[XAXIS] = (gyroSample[XAXIS] / gyroSampleCount) - gyroZero[XAXIS];
+		gyroADC[YAXIS] = (gyroSample[YAXIS] / gyroSampleCount) - gyroZero[YAXIS];
+		gyroADC[ZAXIS] =  gyroZero[ZAXIS] - (gyroSample[ZAXIS] / gyroSampleCount) ;
+		//reset sampling
+		gyroSample[XAXIS] = 0;
+		gyroSample[YAXIS] = 0;
+		gyroSample[ZAXIS] = 0;
+		gyroSampleCount = 0;
 
-    for (uint8_t axis = 0; axis <= ZAXIS; axis++) {
-        gyroRate[axis] = filterSmooth(gyroADC[axis] * gyroScaleFactor, gyroRate[axis], gyroSmoothFactor);
-      }
+		for (uint8_t axis = 0; axis <= ZAXIS; axis++) {
+			gyroRate[axis] = filterSmooth(gyroADC[axis] * gyroScaleFactor, gyroRate[axis], gyroSmoothFactor);
+		  }
+	}
+	// Measure gyro heading
+	long int currentTime = system_uptime();
+	if (gyroRate[ZAXIS] > radians(1.0) || gyroRate[ZAXIS] < radians(-1.0)) {
+		  gyroHeading += gyroRate[ZAXIS] * ((currentTime - gyroLastMesuredTime) / 1000.0);
+	}
 
-    // Measure gyro heading
-    long int currentTime = system_uptime();
-    if (gyroRate[ZAXIS] > radians(1.0) || gyroRate[ZAXIS] < radians(-1.0)) {
-    	  gyroHeading += gyroRate[ZAXIS] * ((currentTime - gyroLastMesuredTime) / 1000.0);
-    }
   gyroLastMesuredTime = currentTime;
+
 }
 
 void reset_gyro_samples(){
