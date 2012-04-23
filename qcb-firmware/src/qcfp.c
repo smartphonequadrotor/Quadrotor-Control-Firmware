@@ -59,6 +59,7 @@ static void qcfp_handle_packet(uint8_t packet[], uint8_t length);
 static bool qcfp_set_throttle(uint8_t payload[], uint8_t length);
 static bool qcfp_set_desired_angles(uint8_t payload[], uint8_t length);
 static bool qcfp_set_increment_height(uint8_t payload[], uint8_t length);
+static bool qcfp_set_altitude_hold(uint8_t payload[], uint8_t length);
 static bool qcfp_calibrate_quadrotor_handler(uint8_t payload[], uint8_t length);
 static bool qcfp_flight_mode_handler(uint8_t payload[], uint8_t length);
 static bool qcfp_raw_motor_control_handler(uint8_t payload[], uint8_t length);
@@ -355,6 +356,9 @@ static void qcfp_handle_packet(uint8_t packet[], uint8_t length)
 		case QCFP_INCREMENT_HEIGHT:
 			nack = qcfp_set_increment_height(payload, payload_length);
 			break;
+		case QCFP_ALTITUDE_HOLD_EN:
+			nack = qcfp_set_altitude_hold(payload, payload_length);
+			break;
 		case QCFP_SET_DESIRED_ANGLE:
 			nack = qcfp_set_desired_angles(payload, payload_length);
 			break;
@@ -439,6 +443,20 @@ static bool qcfp_set_increment_height(uint8_t payload[], uint8_t length)
 	{
 		int16_t delta_height = payload[0] | (payload[1] << 8);
 		set_desired_height_delta(delta_height);
+	}
+	return nack;
+}
+
+// ===========================================================================
+// 0x27
+// ===========================================================================
+static bool qcfp_set_altitude_hold(uint8_t payload[], uint8_t length)
+{
+	bool nack = false;
+	if((length >= 1) && (control_mode == QCFP_CONTROL_MODE_PID))
+	{
+		uint8_t enable = payload[0];
+		enable_altitude_hold(enable);
 	}
 	return nack;
 }

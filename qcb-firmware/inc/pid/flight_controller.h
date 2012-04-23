@@ -43,6 +43,7 @@ SOFTWARE.
 #define FLIGHT_CONTROLLER_H_
 
 #include "pid/math.h"
+#include "qcb.h"
 
 #define ON 1
 #define OFF 0
@@ -66,8 +67,11 @@ SOFTWARE.
 
 #define minThrottleAdjust -50
 #define maxThrottleAdjust 50
-#define altitudeHoldThrottle 1000;
+#define altitudeHoldThrottle 1000
 
+#define min_altitude 20
+#define max_altitude 700
+#define THROTTLE_UPDATE_PERIOD 500*SYSTEM_1_MS
 /*
        CW  0....Front....0 CCW
            ......***......
@@ -95,6 +99,8 @@ void processHeading(void);
 void processAltitudeHold(void);
 void processMinMaxCommand(void);
 void process_flight_control(void);
+void enable_altitude_hold(uint8_t enable);
+void throttle_update_task(void);
 void applyMotorCommand(void);
 void writeMotors(void);
 void write_throttle(int value);

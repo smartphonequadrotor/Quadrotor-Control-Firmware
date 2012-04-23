@@ -45,6 +45,7 @@ SOFTWARE.
 #include "pid/tasks.h"
 #include "system.h"
 #include "eq.h"
+#include "pid/flight_controller.h"
 
 // Must not be called until after a calibration has been performed
 void kinematics_init(void)
@@ -60,11 +61,13 @@ void kinematics_init(void)
 	setupFourthOrder(); //initializes the fourth order filter stuff...
 
 	eq_post_timer(pid_100Hz_task, KINEMATICS_UPDATE_PERIOD, eq_timer_periodic);
+	eq_post_timer(throttle_update_task, THROTTLE_UPDATE_PERIOD, eq_timer_periodic);
 }
 
 void kinematics_stop(void)
 {
 	eq_remove_timer(pid_100Hz_task);
+	eq_remove_timer(throttle_update_task);
 }
 
 #if defined ARG_KIN

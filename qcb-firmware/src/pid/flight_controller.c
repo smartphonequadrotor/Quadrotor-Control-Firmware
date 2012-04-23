@@ -55,6 +55,7 @@ SOFTWARE.
 int receiverThrottle = 1000;
 float receiverCommand[3] = {0.0, 0.0, 0.0};
 int throttle = 1000;
+uint8_t altitude_hold_enabled = 0;
 
 uint8_t maxLimit = OFF;
 uint8_t minLimit = OFF;
@@ -65,8 +66,8 @@ int motorAxisCommandPitch = 0;
 int motorAxisCommandYaw = 0;
 
 //altitude hold...
-int currentSensorAltitude = 0.0f;
-int altitudeTarget = 0.0f;
+int currentSensorAltitude = min_altitude;
+int altitudeTarget = min_altitude;
 
 //heading values...
 uint32_t headingTime = 0;
@@ -99,7 +100,7 @@ void update_flight_control(float x, float y, float z){
 void calculateFlightError()
 {
     float rollAttitudeCmd  = updatePID(receiverCommand[XAXIS], get_kinematics_angle(XAXIS), ATTITUDE_XAXIS_PID_IDX);
-    float pitchAttitudeCmd = updatePID(receiverCommand[YAXIS], -get_kinematics_angle(YAXIS), ATTITUDE_YAXIS_PID_IDX);
+    float pitchAttitudeCmd = updatePID(-receiverCommand[YAXIS], -get_kinematics_angle(YAXIS), ATTITUDE_YAXIS_PID_IDX);
     motorAxisCommandRoll   = updatePID(rollAttitudeCmd, get_axis_gr(XAXIS)*1.2, ATTITUDE_GYRO_XAXIS_PID_IDX);
     motorAxisCommandPitch  = updatePID(pitchAttitudeCmd, -get_axis_gr(YAXIS)*1.2, ATTITUDE_GYRO_YAXIS_PID_IDX);
 }
@@ -215,7 +216,8 @@ void processMinMaxCommand()
 }
 
 void set_desired_height_delta(int height){
-	altitudeTarget = currentSensorAltitude + height;
+	altitudeTarget += height;
+	altitudeTarget = constrain(altitudeTarget, min_altitude, max_altitude);
 }
 void set_sensor_height(int height){
 	currentSensorAltitude = height;
@@ -267,15 +269,7 @@ void process_flight_control() {
   calculateFlightError();
 
   // ********************** Update Yaw ***************************************
-//  processHeading();
-
-  //MANUALLY setting throttle instead of handling in processAltitudeHold.
-//  throttle = receiverThrottle;
-
-  // ********************** Process Altitude hold **************************
-    processAltitudeHold();
-    // ********************** Process throttle correction ********************
-//    processThrottleCorrection();
+  //  processHeading();
 
 
   // ********************** Calculate Motor Commands *************************
@@ -306,6 +300,24 @@ void process_flight_control() {
   }
 }
 
+void enable_altitude_hold(uint8_t enable){
+	altitude_hold_enabled = enable;
+
+}
+
+void throttle_update_task(){
+
+	if(altitude_hold_enabled){
+	  // ********************** Process Altitude hold **************************
+	  processAltitudeHold();
+	  // ********************** Process throttle correction ********************
+	  processThrottleCorrection();
+	}
+	else{
+		throttle = receiverThrottle;
+	}
+
+}
 
 void applyMotorCommand()
 {
