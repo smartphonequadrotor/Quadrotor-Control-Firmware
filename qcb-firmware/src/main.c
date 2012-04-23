@@ -49,8 +49,7 @@ int main(void)
 	// Once everything is initialized, enable interrupts globally
 	interrupts_enable();
 
-	// Enable Expansion module 3 and 4 (sensors plugged into these temporarily)
-	AT91C_BASE_PIOA->PIO_CODR = AT91C_PIO_PA20;
+	// Enable Expansion module 1 (sensor plugged into these temporarily)
 	AT91C_BASE_PIOA->PIO_CODR = AT91C_PIO_PA23;
 
 	sensors_init();

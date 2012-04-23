@@ -72,6 +72,8 @@ SOFTWARE.
 #define SENSORS_CALIBRATED   0x01
 #define SENSORS_CALIBRATING  0x02
 
+#define SENSOR_ENABLE_IO	AT91C_PIO_PA20
+
 #define CALIBRATION_TIME 5*SYSTEM_1_S
 
 void sensors_init(void);

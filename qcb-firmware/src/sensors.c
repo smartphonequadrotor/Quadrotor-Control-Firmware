@@ -30,7 +30,7 @@ SOFTWARE.
 #include "pid/kinematics.h"
 #include "pid/flight_controller.h"
 
-#define SENSOR_STARTUP_DELAY    (20*SYSTEM_1_MS)
+#define SENSOR_STARTUP_DELAY    (30*SYSTEM_1_MS)
 
 static uint8_t sensors_calibration_state = SENSORS_UNCALIBRATED;
 static uint16_t number_of_accel_calibration_samples = 0;
@@ -41,6 +41,7 @@ static bool mag_sample_collected = false;
 
 void sensors_check_calibration_complete(void);
 
+static void sensors_power(void);
 static void sensors_init_delayed(void);
 
 static void sensor_accel_who(uint8_t buffer[], uint8_t length);
@@ -60,6 +61,15 @@ static void sensor_mag_read_complete(uint8_t buffer[], uint8_t length);
 
 void sensors_init(void)
 {
+	//ensure we are off.
+	AT91C_BASE_PIOA->PIO_SODR = SENSOR_ENABLE_IO;
+	eq_post_timer(sensors_power, SENSOR_STARTUP_DELAY, eq_timer_one_shot);
+
+}
+
+static void sensors_power(void){
+	//enable power, add delay to sensor init.
+	AT91C_BASE_PIOA->PIO_CODR = SENSOR_ENABLE_IO;
 	eq_post_timer(sensors_init_delayed, SENSOR_STARTUP_DELAY, eq_timer_one_shot);
 }
 

@@ -26,6 +26,7 @@ SOFTWARE.
 #include "at91lib/twid.h"
 #include "system.h"
 #include "gpio.h"
+#include "sensors.h"
 
 // http://www.i2c-bus.org/highspeed/
 // HIGH to LOW ratio of 1 to 2
@@ -55,6 +56,7 @@ static void twi_async_callback(Async* a);
 static void twi_add_transaction(uint8_t address, eq_handler cb, uint8_t reg, uint8_t value, uint8_t length, twi_mode mode);
 static void twi_kickstart(void);
 static void twi_process_next_transfer(uint8_t unused1[], uint8_t unused2);
+static void TWI_enable(bool enable);
 void twi_watchdog(void);
 
 // Driver structure
@@ -73,6 +75,10 @@ static uint32_t transaction_count = 0, last_transaction = -1;
 static bool twi_transfer_in_progress = false;
 
 static bool watchdog_on = false;
+static bool recovering = false;
+static uint8_t failure_count = 0;
+static uint8_t failure_address_count = 0;
+static uint8_t failure_address = 0;
 
 typedef struct twi_transaction
 {
@@ -305,7 +311,7 @@ void TWI_recovery(){
 	while(i++ < 3000); i = 0;
 
 	for(int n = 0; n < 9; n++){
-		int i = 0;
+		i = 0;
 		//generate pulse...
 
 		AT91C_BASE_PIOA->PIO_CODR = AT91C_PIO_PA4;//0
@@ -327,7 +333,7 @@ void TWI_recovery(){
 static bool led_toggle = false;
 void twi_watchdog(){
 
-	if(twi_events.size && last_transaction == transaction_count){
+	if(!recovering && twi_events.size && last_transaction == transaction_count){
 		if(led_toggle){
 			gpio_clear_leds(gpio_led_4);
 			led_toggle = false;
@@ -340,8 +346,25 @@ void twi_watchdog(){
 		twi_init();
 		twi_kickstart();
 
+		if(failure_address == current_transaction.address){
+			failure_address_count++;
+		}
+		else{
+			failure_address_count = 0;
+		}
+
+		failure_address = current_transaction.address;
+		failure_count++;
+
+		if(failure_count > 1 || failure_address_count > 1){
+			sensors_init();
+			recovering = true;
+		}
+
 	}
 	else if (twi_events.size && transaction_count){
+		failure_count = 0;
 		last_transaction = transaction_count;
+		recovering = false;
 	}
 }
