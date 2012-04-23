@@ -24,6 +24,8 @@ SOFTWARE.
 #include "pins.h"
 #include "at91lib/twi.h"
 #include "at91lib/twid.h"
+#include "system.h"
+#include "gpio.h"
 
 // http://www.i2c-bus.org/highspeed/
 // HIGH to LOW ratio of 1 to 2
@@ -39,6 +41,7 @@ SOFTWARE.
 #define TWI_MAX_OUTSTANDING_TRANSACTIONS 20
 // Corresponds to the max size of the buffers in the event queue
 #define TWI_MAX_RX_SIZE                  32
+#define WATCHDOG_TIMEOUT				 4*SYSTEM_1_MS
 
 typedef enum twi_mode
 {
@@ -52,12 +55,14 @@ static void twi_async_callback(Async* a);
 static void twi_add_transaction(uint8_t address, eq_handler cb, uint8_t reg, uint8_t value, uint8_t length, twi_mode mode);
 static void twi_kickstart(void);
 static void twi_process_next_transfer(uint8_t unused1[], uint8_t unused2);
+void twi_watchdog(void);
 
 // Driver structure
 static Twid twi;
 // Async structure. Invokes default callback upon completion to advance state machine
 static Async twi_async = {0, twi_async_callback, {0, 0, 0, 0}};
 static uint8_t twi_buffer[TWI_MAX_RX_SIZE]; // Used for reads. After a read completes, data is posted to the eq
+static uint32_t transaction_count = 0, last_transaction = -1;
 
 /*
  * Set to false in the interrupt so the next time the twi_process_next_transfer
@@ -66,6 +71,8 @@ static uint8_t twi_buffer[TWI_MAX_RX_SIZE]; // Used for reads. After a read comp
  * true, lets the interrupt handle post an event that will kickoff a transfer
  */
 static bool twi_transfer_in_progress = false;
+
+static bool watchdog_on = false;
 
 typedef struct twi_transaction
 {
@@ -93,9 +100,13 @@ static twi_transaction current_transaction;
 // Initializes transaction circular buffer, peripheral, driver, and interrupts
 void twi_init(void)
 {
+	TWI_recovery();
+
 	twi_events.read_index = 0;
 	twi_events.write_index = 0;
 	twi_events.size = 0;
+	transaction_count = 0;
+	last_transaction = -1;
 
 	// Clock the TWI peripheral
 	AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_TWI);
@@ -110,6 +121,15 @@ void twi_init(void)
 	AT91C_BASE_AIC->AIC_SVR[AT91C_ID_TWI] = (uint32_t)twi_irq_handler;
 	AT91C_BASE_AIC->AIC_SMR[AT91C_ID_TWI] = TWI_INTERRUPT_PRIORITY;
 	AT91C_BASE_AIC->AIC_IECR = (1 << AT91C_ID_TWI);
+
+	twi_transfer_in_progress = false;
+
+
+
+	if(!watchdog_on){
+		watchdog_on = true;
+		eq_post_timer(twi_watchdog, WATCHDOG_TIMEOUT, eq_timer_periodic);
+	}
 }
 
 void twi_write_register(uint8_t address, uint8_t reg, uint8_t value, eq_handler cb)
@@ -213,6 +233,10 @@ static void twi_process_next_transfer(uint8_t unused1[], uint8_t unused2)
 			// by anything except this function
 			twi_transfer_in_progress = true;
 
+			//increment transaction number
+			transaction_count++;
+
+
 			// Pop an event
 			current_transaction = twi_events.transactions[twi_events.read_index++];
 			if(twi_events.read_index >= TWI_MAX_OUTSTANDING_TRANSACTIONS)
@@ -245,5 +269,79 @@ static void twi_process_next_transfer(uint8_t unused1[], uint8_t unused2)
 						);
 			}
 		}
+	}
+}
+
+void TWI_enable(bool enable){
+	if(enable){
+		AT91C_BASE_PIOA->PIO_ASR = AT91C_PIO_PA3 | AT91C_PIO_PA4;
+		AT91C_BASE_PIOA->PIO_PDR = AT91C_PIO_PA3 | AT91C_PIO_PA4;
+	}
+	else{
+		AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA3 | AT91C_PIO_PA4;
+	}
+
+}
+
+void TWI_recovery(){
+	//disable TWI interface
+	TWI_enable(false);
+
+	//SCL as output
+	AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA4 ;//| AT91C_PIO_PA3;
+
+	/*****************
+	The bus recovery procedure is as follows:
+	1. Master tries to assert a Logic 1 on the SDA line
+	2. Master still sees a Logic 0 and then generates a clock pulse on SCL (1-0-1 transition)
+	3. Master examines SDA. If SDA = 0, go to Step 2; if SDA = 1, go to Step 4
+	4. Generate a STOP condition
+	******************/
+	//We don't bother with all this... we flush the buffer by forcing
+	//a worse case senario of 9 clocks. This means that eventually when no ACK
+	//is sent by us, the device will respond with a NACK.
+	AT91C_BASE_PIOA->PIO_SODR = AT91C_PIO_PA4;//1
+	int i = 0;
+	while(i++ < 3000); i = 0;
+
+	for(int n = 0; n < 9; n++){
+		int i = 0;
+		//generate pulse...
+
+		AT91C_BASE_PIOA->PIO_CODR = AT91C_PIO_PA4;//0
+		while(i++ < 3000); i = 0;
+		AT91C_BASE_PIOA->PIO_SODR = AT91C_PIO_PA4;//1
+		while(i++ < 3000);
+	}
+
+	//SCL as input once again
+	AT91C_BASE_PIOA->PIO_ODR = AT91C_PIO_PA4;// | AT91C_PIO_PA3;
+	//re-enable
+	TWI_enable(true);
+
+	//send stop
+	TWI_Stop(twi.pTwi);
+
+}
+
+static bool led_toggle = false;
+void twi_watchdog(){
+
+	if(twi_events.size && last_transaction == transaction_count){
+		if(led_toggle){
+			gpio_clear_leds(gpio_led_4);
+			led_toggle = false;
+		}
+		else{
+			gpio_set_leds(gpio_led_4);
+			led_toggle = true;
+		}
+		TWI_recovery();
+		twi_init();
+		twi_kickstart();
+
+	}
+	else if (twi_events.size && transaction_count){
+		last_transaction = transaction_count;
 	}
 }

@@ -28,6 +28,7 @@ SOFTWARE.
 #define     ITG3200_WHO_ADDR             0x00
 #define         ITG3200_WHO_ID           0x69
 #define     ITG3200_LPF_ADDR             0x16
+#define     ITG3200_INTSET_ADDR             0x17
 #define         ITG3200_10HZ_LPF         0x1D
 #define     ITG3200_RESET_ADDR           0x3E
 #define         ITG3200_RESET            0x80
@@ -70,6 +71,8 @@ SOFTWARE.
 #define SENSORS_UNCALIBRATED 0x00
 #define SENSORS_CALIBRATED   0x01
 #define SENSORS_CALIBRATING  0x02
+
+#define CALIBRATION_TIME 5*SYSTEM_1_S
 
 void sensors_init(void);
 void sensors_set_calibration(bool on);

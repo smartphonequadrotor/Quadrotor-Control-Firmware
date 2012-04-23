@@ -52,6 +52,9 @@ SOFTWARE.
 #define DEG_TO_RAD 0.017453292519943295769236907684886
 #define RAD_TO_DEG 57.295779513082320876798154814105
 
+#define kin_fourth_x 3
+#define kin_fourth_y 4
+#define kin_fourth_z 5
 
 // undefine stdlib's abs if encountered
 #ifdef abs

@@ -57,7 +57,7 @@ volatile float SamplePeriod;       		// sample period in seconds
 // Variable definitions
 
 volatile float beta = betaDef;								// 2 * proportional gain (Kp)
-volatile float q1 = -1.0f, q2 = 0.0f, q3 = 0.0f, q4 = 0.0f;	// quaternion of sensor frame relative to auxiliary frame
+volatile float q1 = -0.776976407f, q2 = 0.00115542114f, q3 = 0.000856686675f, q4 = -0.629528165f;	// quaternion of sensor frame relative to auxiliary frame
 volatile float kinematicsAngle[3] = {0.0,0.0,0.0};
 //====================================================================================================
 // Functions
@@ -182,6 +182,12 @@ void eulerAngles(void)
   kinematicsAngle[XAXIS]  = asin(2 * (q1*q3 - q2*q4));
   kinematicsAngle[YAXIS] = atan2(2 * (q1*q2 + q3*q4), 1 - 2 *(q2*q2 + q3*q3));
   kinematicsAngle[ZAXIS]   = -atan2(2 * (q1*q4 + q2*q3), 1 - 2 *(q3*q3 + q4*q4));
+
+
+  	for (uint8_t axis = kin_fourth_x; axis <= kin_fourth_z; axis++) {
+  		kinematicsAngle[axis] = computeFourthOrder(kinematicsAngle[axis], axis);
+  	}
+
   //Note that the previous configuration did NOT negate the z-axis!
 	/*
 float heading, bank, attitude;
@@ -213,7 +219,7 @@ float heading, bank, attitude;
 }
 
 void initializeKinematics(){
-	q1 = -1.0f; q2 = 0.0f; q3 = 0.0f; q4 = 0.0f;	// quaternion of sensor frame relative to auxiliary frame
+	q1 = -0.776976407f; q2 = 0.00115542114f; q3 = 0.000856686675f; q4 = -0.629528165f;	// quaternion of sensor frame relative to auxiliary frame
 	kinematicsAngle[0] = 0.0;
 	kinematicsAngle[1] = 0.0;
 	kinematicsAngle[2] = 0.0;

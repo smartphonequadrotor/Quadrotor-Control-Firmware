@@ -82,3 +82,5 @@ void pins_init(void)
 	// Disable peripheral pins from PIO control
 	AT91C_BASE_PIOA->PIO_PDR = PERIPHERAL_A_FUNCTION | PERIPHERAL_B_FUNCTION;
 }
+
+

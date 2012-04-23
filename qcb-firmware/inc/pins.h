@@ -34,5 +34,7 @@ SOFTWARE.
  *  Function that initializes the pins of the QCB.
  */
 void pins_init(void);
+static void TWI_enable(bool enable);
+void TWI_recovery(void);
 
 #endif // _PINS_H_

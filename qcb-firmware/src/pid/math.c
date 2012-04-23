@@ -397,7 +397,7 @@ int32_t isq(int32_t  x) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-fourthOrderData fourthOrder[3];
+fourthOrderData fourthOrder[6];
 
 float computeFourthOrder(float currentInput, uint8_t index)
 {
@@ -462,6 +462,35 @@ void setupFourthOrder()
   fourthOrder[ZAXIS].outputTm3 = 9.8065;
   fourthOrder[ZAXIS].outputTm4 = 9.8065;
 
+  fourthOrder[kin_fourth_x].inputTm1 = 0.0;
+    fourthOrder[kin_fourth_x].inputTm2 = 0.0;
+    fourthOrder[kin_fourth_x].inputTm3 = 0.0;
+    fourthOrder[kin_fourth_x].inputTm4 = 0.0;
+
+    fourthOrder[kin_fourth_x].outputTm1 = 0.0;
+    fourthOrder[kin_fourth_x].outputTm2 = 0.0;
+    fourthOrder[kin_fourth_x].outputTm3 = 0.0;
+    fourthOrder[kin_fourth_x].outputTm4 = 0.0;
+
+    fourthOrder[kin_fourth_y].inputTm1 = 0.0;
+      fourthOrder[kin_fourth_y].inputTm2 = 0.0;
+      fourthOrder[kin_fourth_y].inputTm3 = 0.0;
+      fourthOrder[kin_fourth_y].inputTm4 = 0.0;
+
+      fourthOrder[kin_fourth_y].outputTm1 = 0.0;
+      fourthOrder[kin_fourth_y].outputTm2 = 0.0;
+      fourthOrder[kin_fourth_y].outputTm3 = 0.0;
+      fourthOrder[kin_fourth_y].outputTm4 = 0.0;
+
+      fourthOrder[kin_fourth_z].inputTm1 = 0.0;
+        fourthOrder[kin_fourth_z].inputTm2 = 0.0;
+        fourthOrder[kin_fourth_z].inputTm3 = 0.0;
+        fourthOrder[kin_fourth_z].inputTm4 = 0.0;
+
+        fourthOrder[kin_fourth_z].outputTm1 = 0.0;
+        fourthOrder[kin_fourth_z].outputTm2 = 0.0;
+        fourthOrder[kin_fourth_z].outputTm3 = 0.0;
+        fourthOrder[kin_fourth_z].outputTm4 = 0.0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

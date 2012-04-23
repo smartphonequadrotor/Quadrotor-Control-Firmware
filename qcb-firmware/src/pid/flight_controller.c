@@ -267,15 +267,15 @@ void process_flight_control() {
   calculateFlightError();
 
   // ********************** Update Yaw ***************************************
-  processHeading();
+//  processHeading();
 
   //MANUALLY setting throttle instead of handling in processAltitudeHold.
-  throttle = receiverThrottle;
+//  throttle = receiverThrottle;
 
   // ********************** Process Altitude hold **************************
     processAltitudeHold();
     // ********************** Process throttle correction ********************
-    processThrottleCorrection();
+//    processThrottleCorrection();
 
 
   // ********************** Calculate Motor Commands *************************
@@ -289,12 +289,12 @@ void process_flight_control() {
   //processHardManuevers();
 
   // If throttle in minimum position, don't apply yaw
-  if (receiverThrottle < MINCHECK) {
+/*  if (throttle < MINCHECK) {
     for (uint8_t motor = 0; motor < LASTMOTOR; motor++) {
       motorMaxCommand[motor] = MIN_ARMED_THROTTLE;
     }
   }
-
+*/
   // Apply limits to motor commands
   for (uint8_t motor = 0; motor < LASTMOTOR; motor++) {
     motorCommand[motor] = constrain(motorCommand[motor], motorMinCommand[motor], motorMaxCommand[motor]);

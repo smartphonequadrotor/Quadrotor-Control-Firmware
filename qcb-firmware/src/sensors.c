@@ -74,6 +74,7 @@ static void sensors_init_delayed(void)
 	twi_read_register(SENSOR_GYRO_ADDR, ITG3200_WHO_ADDR, 1, sensor_gyro_who);
 	twi_write_register(SENSOR_GYRO_ADDR, ITG3200_RESET_ADDR, ITG3200_RESET, NULL);
 	twi_write_register(SENSOR_GYRO_ADDR, ITG3200_LPF_ADDR, ITG3200_10HZ_LPF, NULL);
+	twi_write_register(SENSOR_GYRO_ADDR, ITG3200_INTSET_ADDR, 0x00, NULL);
 	twi_write_register(SENSOR_GYRO_ADDR, ITG3200_RESET_ADDR, ITG3200_X_GYRO_REF, sensor_gyro_init_complete);
 	// Initialize magnetometer
 	twi_read_register(SENSOR_MAG_ADDR, HMC5843_WHO_ADDR, 3, sensor_mag_who);
@@ -128,7 +129,7 @@ void sensors_check_calibration_complete(void)
 		// Read compass uses the sample and calculates a heading
 		read_compass(0.0, 0.0);
 		kinematics_init();
-		eq_post_timer(sensors_complete_calibration, 25*SYSTEM_1_S, eq_timer_one_shot);
+		eq_post_timer(sensors_complete_calibration, CALIBRATION_TIME, eq_timer_one_shot);
 	}
 }
 
