@@ -77,8 +77,7 @@ static bool twi_transfer_in_progress = false;
 static bool watchdog_on = false;
 static bool recovering = false;
 static uint8_t failure_count = 0;
-static uint8_t failure_address_count = 0;
-static uint8_t failure_address = 0;
+
 
 typedef struct twi_transaction
 {
@@ -346,24 +345,16 @@ void twi_watchdog(){
 		twi_init();
 		twi_kickstart();
 
-		if(failure_address == current_transaction.address){
-			failure_address_count++;
-		}
-		else{
-			failure_address_count = 0;
-		}
-
-		failure_address = current_transaction.address;
 		failure_count++;
 
-		if(failure_count > 1 || failure_address_count > 1){
+		if(failure_count == 3 ){
+			failure_count = 0;
 			sensors_init();
 			recovering = true;
 		}
 
 	}
 	else if (twi_events.size && transaction_count){
-		failure_count = 0;
 		last_transaction = transaction_count;
 		recovering = false;
 	}

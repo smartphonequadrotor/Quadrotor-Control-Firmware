@@ -50,7 +50,7 @@ SOFTWARE.
 
 
 volatile float SamplePeriod;       		// sample period in seconds
-#define betaDef		0.2f		// 2 * proportional gain
+#define betaDef		0.15f		// 2 * proportional gain
 
 
 //---------------------------------------------------------------------------------------------------

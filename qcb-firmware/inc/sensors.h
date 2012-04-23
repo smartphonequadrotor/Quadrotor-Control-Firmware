@@ -35,7 +35,7 @@ SOFTWARE.
 #define         ITG3200_X_GYRO_REF       0x01
 #define     ITG3200_DATAX0_ADDR          0x1D
 #define     ITG3200_DATA_START           ITG3200_DATAX0_ADDR
-#define SENSOR_GYRO_SAMPLE_INTERVAL      5
+#define SENSOR_GYRO_SAMPLE_INTERVAL      10
 #define SENSOR_NUM_GYRO_BYTES            6
 
 #define SENSOR_ACCEL_ADDR                0x53
@@ -53,7 +53,7 @@ SOFTWARE.
 #define         ADXL345_4G_RANGE         0x01
 #define     ADXL345_DATAX0_ADDR          0x32
 #define     ADXL345_DATA_START           ADXL345_DATAX0_ADDR
-#define SENSOR_ACCEL_SAMPLE_INTERVAL     5
+#define SENSOR_ACCEL_SAMPLE_INTERVAL     10
 #define SENSOR_NUM_ACCEL_BYTES           6
 
 #define SENSOR_MAG_ADDR                  0x1E
