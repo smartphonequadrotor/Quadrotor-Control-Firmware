@@ -82,6 +82,16 @@ int motorMinCommand[4] = {MINCHECK, MINCHECK, MINCHECK, MINCHECK};
 int motorConfiguratorCommand[4] = {0,0,0,0};
 int motorCommand[4] = {0,0,0,0};
 
+void flight_control_init(){
+	receiverCommand[XAXIS] = 0;
+	receiverCommand[YAXIS] = 0;
+	receiverCommand[ZAXIS] = 0;
+	altitude_hold_enabled = 0;
+	altitudeTarget = currentSensorAltitude;
+	receiverThrottle = MINTHROTTLE;
+	throttle = MINTHROTTLE;
+	reset_heading_values();
+}
 //heading reset...
 void reset_heading_values()
 {
@@ -269,7 +279,7 @@ void process_flight_control() {
   calculateFlightError();
 
   // ********************** Update Yaw ***************************************
-  //  processHeading();
+    processHeading();
 
 
   // ********************** Calculate Motor Commands *************************
@@ -302,7 +312,12 @@ void process_flight_control() {
 
 void enable_altitude_hold(uint8_t enable){
 	altitude_hold_enabled = enable;
-
+	if(enable){
+		altitudeTarget = currentSensorAltitude;
+	}
+	else{
+		receiverThrottle = throttle;
+	}
 }
 
 void throttle_update_task(){
@@ -339,7 +354,8 @@ void writeMotors()
 
 void write_throttle(int value)
 {
-		receiverThrottle = value;
+		receiverThrottle += value;
+		receiverThrottle = constrain(receiverThrottle, MINCHECK, MAXCHECK);
 }
 
 int read_throttle()

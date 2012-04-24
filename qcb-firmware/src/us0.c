@@ -124,22 +124,37 @@ void us0_init(void)
 	// The transmitter isn't enabled until we have something to transmit
 	AT91C_BASE_US0->US_CR = AT91C_US_RXEN;
 }
+uint8_t patch[10];
+uint8_t patch_size = 0;
 
 void us0_height_data_received(uint8_t buffer[], uint8_t buffer_size)
 {
 	uint8_t n1, n2, n3;
 	uint16_t height;
 
-	if((buffer_size == 5) && (buffer[0] == 'R') && (buffer[4] == '\r'))
+	//add to patch.
+	for(int i = 0; i < buffer_size; i++){
+		patch[patch_size+i] = buffer[i];
+	}
+
+	patch_size += buffer_size;
+
+	while((patch_size >= 5) && (patch[0] == 'R') && (patch[4] == '\r'))
 	{
-		n1 = buffer[1];
-		n2 = buffer[2];
-		n3 = buffer[3];
+		n1 = patch[1];
+		n2 = patch[2];
+		n3 = patch[3];
 		if((n1 >= '0') && (n1 <= '9') && (n2 >= '0') && (n2 <= '9') && (n3 >= '0') && (n3 <= '9'))
 		{
 			height = (n1 - '0')*100 + (n2 - '0')*10 + (n3 - '0');
 			qcfp_send_height_data(height);
 			set_sensor_height(height);
 		}
+		patch_size -= 5;
+
+		for(int i = 0; i < patch_size ; i++){
+			patch[i] = patch[i+5];
+		}
+
 	}
 }

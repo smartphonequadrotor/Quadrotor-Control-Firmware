@@ -400,7 +400,7 @@ static void qcfp_handle_packet(uint8_t packet[], uint8_t length)
 static bool qcfp_set_throttle(uint8_t payload[], uint8_t length)
 {
 	bool nack = false;
-	uint16_t throttle = 0;
+	int throttle = 0;
 	if(length < 2)
 	{
 		throttle = read_throttle();
@@ -412,6 +412,8 @@ static bool qcfp_set_throttle(uint8_t payload[], uint8_t length)
 	{
 		throttle  = (payload[0] << 0) & 0x000000FF;
 		throttle |= (payload[1] << 8) & 0x0000FF00;
+		if(0x8000 & throttle)
+			throttle |= 0xFFFF0000;
 		write_throttle(throttle);
 	}
 	return nack;
@@ -441,7 +443,9 @@ static bool qcfp_set_increment_height(uint8_t payload[], uint8_t length)
 	bool nack = false;
 	if((length >= 2) && (control_mode == QCFP_CONTROL_MODE_PID))
 	{
-		int16_t delta_height = payload[0] | (payload[1] << 8);
+		int delta_height = payload[0] | (payload[1] << 8);
+		if(0x8000 & delta_height)
+			delta_height |= 0xFFFF0000;
 		set_desired_height_delta(delta_height);
 	}
 	return nack;
@@ -549,6 +553,7 @@ static bool qcfp_flight_mode_handler(uint8_t payload[], uint8_t length)
 				if(flight_mode == false)
 				{
 					pwm_off_all();
+					flight_control_init();
 					gpio_set_escs(true);
 					// Because of the design of the timer module, this post will fail if the callback
 					// has already been posted. Because of this, we are guaranteed that the callback
@@ -640,6 +645,7 @@ static bool qcfp_control_method_override_handler(uint8_t payload[], uint8_t leng
 				// PID is disabled by the fact that control_mode is not QCFP_CONTROL_MODE_PID
 				break;
 			case QCFP_CONTROL_MODE_PID:
+				flight_control_init();
 				pid_init();
 				break;
 			default:
