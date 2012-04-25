@@ -354,7 +354,7 @@ void writeMotors()
 
 void write_throttle(int value)
 {
-		receiverThrottle += value;
+		receiverThrottle = value;
 		receiverThrottle = constrain(receiverThrottle, MINCHECK, MAXCHECK);
 }
 
