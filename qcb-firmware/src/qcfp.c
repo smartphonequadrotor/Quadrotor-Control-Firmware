@@ -49,6 +49,11 @@ static bool flight_mode = false;
 
 static uint8_t control_mode = QCFP_CONTROL_MODE_NORMAL;
 
+//timeout period check
+#define WATCHDOG_TIMEOUT				 SYSTEM_1_S
+// Variables to keep track of communication transactions.
+static uint32_t transaction_count = 0, last_transaction = -1;
+
 // All handlers execute at the main loop level. Instead of using the
 // stack, they can all share this buffer for assembling their responses.
 static uint8_t response_buffer[QCFP_MAX_PACKET_SIZE];
@@ -64,10 +69,11 @@ static bool qcfp_calibrate_quadrotor_handler(uint8_t payload[], uint8_t length);
 static bool qcfp_flight_mode_handler(uint8_t payload[], uint8_t length);
 static bool qcfp_raw_motor_control_handler(uint8_t payload[], uint8_t length);
 static bool qcfp_control_method_override_handler(uint8_t payload[], uint8_t length);
+static void qcfp_watchdog(void);
 
 void qcfp_init(void)
 {
-
+	eq_post_timer(qcfp_watchdog, WATCHDOG_TIMEOUT, eq_timer_periodic);
 }
 
 void qcfp_data_received(uint8_t buffer[], uint8_t buffer_size)
@@ -656,4 +662,31 @@ static bool qcfp_control_method_override_handler(uint8_t payload[], uint8_t leng
 
 	response_length = 2;
 	return false;
+}
+
+//This watchdog monitors qcfp activity to ensure that the system maintains base communication.
+//If running, It should enable PID operation and set the throttle of the PID controller to a
+//value that ensures a slightly lower than hovering throttle.
+void qcfp_watchdog(){
+
+	if(last_transaction == transaction_count){
+		//reset transaction info
+		transaction_count = 0;
+		last_transaction = -1;
+
+		//set throttle.
+		write_throttle(DESCEND_THROTTLE);
+
+		//disable altitude hold
+		enable_altitude_hold(false);
+
+		//set control to PID, Initialise
+		control_mode = QCFP_CONTROL_MODE_PID;
+		flight_control_init();
+		pid_init();
+
+	}
+	else if (transaction_count){
+			last_transaction = transaction_count;
+	}
 }

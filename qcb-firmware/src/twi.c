@@ -57,7 +57,7 @@ static void twi_add_transaction(uint8_t address, eq_handler cb, uint8_t reg, uin
 static void twi_kickstart(void);
 static void twi_process_next_transfer(uint8_t unused1[], uint8_t unused2);
 static void TWI_enable(bool enable);
-void twi_watchdog(void);
+static void twi_watchdog(void);
 
 // Driver structure
 static Twid twi;

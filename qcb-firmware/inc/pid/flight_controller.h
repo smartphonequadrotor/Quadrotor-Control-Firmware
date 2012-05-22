@@ -68,6 +68,7 @@ SOFTWARE.
 #define minThrottleAdjust -50
 #define maxThrottleAdjust 50
 #define altitudeHoldThrottle 1000
+#define DESCEND_THROTTLE 1450
 
 #define min_altitude 20
 #define max_altitude 700
